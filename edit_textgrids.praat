@@ -7,7 +7,7 @@
 # Phonetics and speech Laboratory, Trinity College Dublin
 # Jan 12, 2019
 
-# This script opens every sound file with a matching textgid in a chosen directory for editing.
+# This script opens every sound file with a matching textgrid in a chosen directory for editing.
 # The user can choose which tier to hide in the text grid to avoid cluttering the screen.
 # 
 # When the script is run, two UI forms appear:
@@ -16,7 +16,7 @@
 #            - sound file suffix (with or with out ".")
 #            - textgrids and sounds files (wav) must be in the same directory
 #     2. Show/Hide Tiers
-#            - Tick the tiers you want to display while editting
+#            - Tick the tiers you want to display while editing
 #            - It is not possible to hide all tiers
 
 # When viewing the textgrid and sound files, the user can:
@@ -27,7 +27,7 @@
 #
 # Failsafes / Error Handling
 #     1. a backup directory is created which contains:
-#            - a copy of each text grid which appears in the editor window (before editting)
+#            - a copy of each text grid which appears in the editor window (before editing)
 #            - a report listing all texgrids changed
 #     2. The script cannot cope with tier names beginning with a number or which contain characters
 #        that break variable name conventions (with the exception of initial capitals)
