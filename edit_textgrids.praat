@@ -1,4 +1,4 @@
-# EDIT TEXTGRID BATCH V2.0
+# EDIT TEXTGRID BATCH V.2.0
 # ========================
 # Written for Praat 6.0.40
 
