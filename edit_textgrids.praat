@@ -58,8 +58,8 @@ while tiersToShow = 0
 	beginPause: "Show/Hide Tiers"
 	comment: "Check the tiers you want to view while editing"
 	for i to tier.names
-		curBoolean$ = replace_regex$(tier.name$[i], ".", "\L&", 1) + " tier"
-		boolean: curBoolean$, 0
+        curBoolean$ = replace_regex$(tier.name$[i], ".", "\L&", 1) + " tier"
+        boolean: curBoolean$, 0
 	endfor
 	endPause: "Continue", 1
     # Check that there is at least 1 tier to show
@@ -78,8 +78,8 @@ hide_tiers$ = ""
 for i to tier.names
     curBoolean$ = replace_regex$(tier.name$[i], ".", "\L&", 1) + "_tier"
     if not 'curBoolean$'
-	    hide_tiers$ += tier.name$[i] + " "
-	endif
+        hide_tiers$ += tier.name$[i] + " "
+    endif
 endfor
 if right$(hide_tiers$, 1) = " "
     hide_tiers$ = left$(hide_tiers$, length(hide_tiers$) - 1)
@@ -384,7 +384,7 @@ procedure removeDuplicateTiers: .textGrid
         .cur_tier$ = Get tier name: .cur_tier
         if .cur_tier$ = .prev_tier$
             appendInfo: " ", .name$, tab$, """", replace$(.cur_tier$, "TextGrid ", "", 0) , 
-			    ... """ duplicate removed"
+                ... """ duplicate removed"
             Remove tier: .cur_tier
         endif
     .prev_tier$ = .cur_tier$ 
