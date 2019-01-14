@@ -10,6 +10,7 @@
 # This script draws an FFT and LPC slice in the same frame.
 # For the sake of simplicity, there are not options to modify the picture format.
 # y-axis are set to the Praat defaults to that the FFT and LPC are easily comparible.
+# To save file, uncheck the "suppress save" option in the UI form.
 
 ##############
 # USER INPUT #
@@ -22,6 +23,7 @@ form Draw LPC and FFT slice in Praat
     natural max_hertz 5000
     positive time_slice 0.5
     boolean draw_vertical_lines 0
+	boolean supress_save 1
 endform
 
 # process UI
@@ -92,8 +94,10 @@ title$ = replace$(title$, "_", "\_ ", 0) +
 Text top: "yes", title$
 
 # Save image
-fileName$ = chooseWriteFile$: "Save as PNG file", saveName$
-Save as 300-dpi PNG file: fileName$
+if not supress_save
+    fileName$ = chooseWriteFile$: "Save as PNG file", saveName$
+   Save as 300-dpi PNG file: fileName$
+endif
 
 ###########
 # TIDY UP #
