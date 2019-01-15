@@ -106,9 +106,7 @@ procedure drawPitchPic: .sound,
     plusObject: .pitch_object
     Select outer viewport: 0, .image_width, 0, 4
     if .f0_measurement = 1
-        .markDistance = round(.range/10)
-        .power = (length(string$(.markDistance)) - 1)
-        .markDistance = round(.markDistance/10^.power)*10^.power
+        .markDistance = round(round(.range/10)/10)*10
         Draw separately: .start_time, .end_time, .minimum_F0, .maximum_F0, "yes", "yes", "no"
     else
         Draw separately (semitones): .start_time, .end_time, .minimum_F0, .maximum_F0, "yes", "yes", "no"
