@@ -134,7 +134,7 @@ procedure drawPitchPic: .sound,
         Line width: 1
         Black
         Marks left every: 1, .markDistance, "yes", "yes", "no"
-        Text left: "yes", "Fundamental Frequency (semtines re 100 Hz)"
+        Text left: "yes", "Fundamental Frequency (semitones re 100 Hz)"
     endif
 
     # draw remaining image elements
