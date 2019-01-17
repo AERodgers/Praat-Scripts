@@ -1,4 +1,4 @@
-# EDIT TEXTGRID BATCH V.2.0
+# EDIT TEXTGRID BATCH V.2.1
 # ========================
 # Written for Praat 6.0.40
 
@@ -145,7 +145,7 @@ option_1$[2] = "Show pitch"
 for curr_sound to numberOfSounds
     # declare / reset remove pitch if toggle pitch not set
     if edit_choice != 1
-        remove_pitch_contour = 0
+     remove_pitch_contour = 0
     endif
 
     selectObject: sound_list
