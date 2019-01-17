@@ -9,7 +9,7 @@
 
 # This script opens every sound file with a matching textgrid in a chosen directory for editing.
 # The user can choose which tier to hide in the text grid to avoid cluttering the screen.
-# 
+#
 # When the script is run, two UI forms appear:
 #     1. Choose Directory form
 #            - the directory with textgrid and sound files (with or without final "/" or "\")
@@ -20,10 +20,12 @@
 #            - It is not possible to hide all tiers
 
 # When viewing the textgrid and sound files, the user can:
-#     1. stop the script
-#     2. skip back to the previous textgrid
-#     3. skip to the next textgrid
-#     4. save the current textgrid and move to the next one
+#     1. Stop the script
+#     2. Redraw the spectrogram to "kill" or "show" the original F0 contour
+#        (This was done to help distinguish between prominence with and without pitch effects)
+#     3. Skip back to the previous textgrid
+#     4. Skip to the next textgrid
+#     5. Save the current textgrid and move to the next one
 #
 # Failsafes / Error Handling
 #     1. a backup directory is created which contains:
@@ -40,7 +42,7 @@
 form Text grid editor: Choose Directory
     sentence directory ..\Field Recordings\F5\sentence_modes
     word defaultSoundFile .wav
-	endform
+    endform
 # correct form errors
 if left$(defaultSoundFile$, 1) != "."
     defaultSoundFile$ = "." + defaultSoundFile$
@@ -55,13 +57,13 @@ endif
 tiersToShow = 0
 while tiersToShow = 0
     # Show/Hide tiers UI
-	beginPause: "Show/Hide Tiers"
-	comment: "Check the tiers you want to view while editing"
-	for i to tier.names
+    beginPause: "Show/Hide Tiers"
+    comment: "Check the tiers you want to view while editing"
+    for i to tier.names
         curBoolean$ = replace_regex$(tier.name$[i], ".", "\L&", 1) + " tier"
         boolean: curBoolean$, 0
-	endfor
-	endPause: "Continue", 1
+    endfor
+    endPause: "Continue", 1
     # Check that there is at least 1 tier to show
     for i to tier.names
         curBoolean$ = replace_regex$ (tier.name$[i], ".", "\L&", 1) + "_tier"
@@ -133,11 +135,19 @@ Remove
 maxlen = length(string$(numberOfSounds))
 zeros$ = "00000000"
 spaces$ = "         "
+edit_choice = 0
+option_1$[1] = "Kill pitch"
+option_1$[2] = "Show pitch"
 
 #########################
 # MAIN EDITTING ROUTINE #
 #########################
 for curr_sound to numberOfSounds
+    # declare / reset remove pitch if toggle pitch not set
+    if edit_choice != 1
+        remove_pitch_contour = 0
+    endif
+
     selectObject: sound_list
     soundName$ = Get string: curr_sound
 
@@ -164,6 +174,13 @@ for curr_sound to numberOfSounds
         soundobject = selected()
         Scale intensity: 70
 
+        ### remove pitch if selected
+        if remove_pitch_contour
+            @neutralise_pitch: soundobject
+            old_sound = soundobject
+            soundobject = neutralise_pitch.ans
+        endif
+
         Read from file: directory$ + soundName$ + ".TextGrid"
         Save as text file: backupPath$ + soundName$ + ".TextGrid"
         textgrid = selected()
@@ -184,27 +201,42 @@ for curr_sound to numberOfSounds
         pauseText$ = "Editting; " + replace$(soundName$, "_", " ", 0)
         beginPause: pauseText$
             comment: "Go back, skip forward without saving, or save and skip forward?"
-        edit_choice = endPause: "<", ">", "Save", 3
+        edit_choice = endPause: option_1$[remove_pitch_contour + 1], "<", ">", "Save", 4
 
         # save merged textgrid if any have been specified
         if length(hide_tiers$) != 0
             @merge_textgrids
         endif
-        if edit_choice = 3
+        if edit_choice = 4
             selectObject: textgrid
             Save as text file: directory$ + soundName$ + ".TextGrid"
             @reportUpdate: reportFilePath$,  " saved."
-        elsif edit_choice = 2
+        elsif edit_choice = 3
             @reportUpdate: reportFilePath$, " skipped."
-        elsif edit_choice = 1 and curr_sound > 1
+        elsif edit_choice = 2 and curr_sound > 1
             curr_sound -= 2
             @reportUpdate: reportFilePath$, " jumping back."
-        else
+        elsif edit_choice = 2 and curr_sound = 1
             @reportUpdate: reportFilePath$, " cannot jump back - moving forward"
+        elsif edit_choice = 1 and remove_pitch_contour
+            @reportUpdate: reportFilePath$, " redrawing with original contour"
+        else
+            @reportUpdate: reportFilePath$, " redrawing with neutralised pitch"
         endif
+
         # remove current sound object and textgrid
+        selectObject: textgrid
         plusObject: soundobject
+        if remove_pitch_contour
+            plusObject: old_sound
+        endif
         Remove
+
+        # adjust flag values if edit choice = toggle pitch neturalisation
+        if edit_choice = 1
+            remove_pitch_contour = not remove_pitch_contour
+            curr_sound -= 1
+        endif
     else
         @reportUpdate: reportFilePath$,  " does not have an associated text grid file."
     endif
@@ -253,16 +285,52 @@ for .i to .numberOfGrids
             .name$[.names] = .cur_tier$
         endif
     endfor
-	Remove
+    Remove
 endfor
 selectObject: .grid_list
 Remove
 endproc
 
+# neutralise pitch contour
+procedure neutralise_pitch: .sound
+    # create objects
+    selectObject: .sound
+    .sound$ = selected$ ("Sound")
+    To Pitch (ac): 0, 75, 15, "no", 0.03, 0.45, 0.01, 0.35, 0.14, 600
+    .pitch = selected ()
+    selectObject: .sound
+    To Manipulation: 0.01, 75, 600
+    .manip = selected ()
+
+    # get importat time and pitch info
+    selectObject: .pitch
+    .time_s = Get start time
+    .dur = Get total duration
+    .median_pitch = Get quantile: 0, 0, 0.5, "Hertz"
+
+    # remove pitch contour from sound
+    selectObject: .manip
+    Edit
+    editor: .manip
+        Set pitch units: "Hertz"
+        Move cursor to: .time_s
+        Move end of selection by: .dur
+        Remove pitch point(s)
+        Add pitch point at: .time_s + .dur/2, .median_pitch
+    endeditor
+    Get resynthesis (overlap-add)
+    .ans = selected()
+    .new_name$ = .sound$ + "_no_pitch"
+    Rename: .new_name$
+    selectObject: .manip
+    plusObject: .pitch
+    Remove
+endproc
+
 ### Report Procedures
 procedure reportInitialise: .reportFile$, .text$
-	writeInfoLine: .text$
-	writeFileLine: .reportFile$, .text$
+    writeInfoLine: .text$
+    writeFileLine: .reportFile$, .text$
 endproc
 
 procedure reportUpdate: .reportFile$, .text$
@@ -334,7 +402,7 @@ procedure merge_textgrids
         plusObject: .new
         Merge
         .newNew =selected()
-		Remove tier: 1
+        Remove tier: 1
         selectObject: .temp_single_tier
         plusObject: .new
         Remove
@@ -376,17 +444,17 @@ endproc
 
 procedure removeDuplicateTiers: .textGrid
     selectObject: .textGrid
-	.name$ = selected$()
+    .name$ = selected$()
     .num_tiers = Get number of tiers
     .prev_tier$ = Get tier name: .num_tiers
     for .i from 2 to .num_tiers
         .cur_tier = .num_tiers - .i + 1
         .cur_tier$ = Get tier name: .cur_tier
         if .cur_tier$ = .prev_tier$
-            appendInfo: " ", .name$, tab$, """", replace$(.cur_tier$, "TextGrid ", "", 0) , 
+            appendInfo: " ", .name$, tab$, """", replace$(.cur_tier$, "TextGrid ", "", 0) ,
                 ... """ duplicate removed"
             Remove tier: .cur_tier
         endif
-    .prev_tier$ = .cur_tier$ 
+    .prev_tier$ = .cur_tier$
     endfor
 endproc
