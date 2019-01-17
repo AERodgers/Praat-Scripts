@@ -222,7 +222,7 @@ Remove
 # Procedures #
 ##############
 
-### Get all tier names in diractory
+### Get all tier names in directory
 procedure tier: .directory$
 .names = 0
 # Get list of textgrids
