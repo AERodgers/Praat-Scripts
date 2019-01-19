@@ -53,8 +53,8 @@
 form Text grid editor: Choose Directory
     sentence directory test folder
     word defaultSoundFile .wav
-	sentence resynthesis_directory resynth
-	word resynthesis_file_prefix RS_
+    sentence resynthesis_directory resynth
+    word resynthesis_file_prefix RS_
     endform
 # correct form errors
 if left$(defaultSoundFile$, 1) != "."
@@ -157,7 +157,7 @@ option_1$[1] = "Kill pitch"
 option_1$[2] = "Show pitch"
 option_2$[1] = "Resynth"
 option_2$[2] = "Original"
-current_pitch$[1] = "NORMAL PITCH" 
+current_pitch$[1] = "NORMAL PITCH"
 current_pitch$[2] = "NEUTRALISED PITCH"
 #########################
 # MAIN EDITTING ROUTINE #
@@ -226,14 +226,14 @@ for curr_sound to numberOfSounds
         # pause to let user edit the text gtid
         pauseText$ = "Editing " + soundName$
         beginPause: pauseText$
-		comment: "CURRENTLY SHOWING " +
-		    ... replace_regex$ (option_2$[-show_RS + 2], ".", "\U&", 0) + 
-			... " WAVEFORM (" + 
-		    ... current_pitch$[remove_pitch_contour + 1] + ")"
-        edit_choice = endPause: 
-		    ... option_1$[remove_pitch_contour + 1],
-			... option_2$[show_RS + 1],
-			... "<", ">", "Save", 4
+        comment: "CURRENTLY SHOWING " +
+            ... replace_regex$ (option_2$[-show_RS + 2], ".", "\U&", 0) +
+            ... " WAVEFORM (" +
+            ... current_pitch$[remove_pitch_contour + 1] + ")"
+        edit_choice = endPause:
+            ... option_1$[remove_pitch_contour + 1],
+            ... option_2$[show_RS + 1],
+            ... "<", ">", "Save", 4
 
         # save merged textgrid if any have been specified
         if length(hide_tiers$) != 0
@@ -243,7 +243,7 @@ for curr_sound to numberOfSounds
             selectObject: textgrid
             Save as text file: directory$ + soundName$ + ".TextGrid"
             @reportUpdate: reportFilePath$,  " saved."
-			curr_sound -= 1
+            curr_sound -= 1
         elsif edit_choice = 4
             @reportUpdate: reportFilePath$, " forward."
         elsif edit_choice = 3 and curr_sound > 1
