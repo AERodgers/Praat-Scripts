@@ -159,9 +159,10 @@ option_2$[1] = "Resynth"
 option_2$[2] = "Original"
 current_pitch$[1] = "NORMAL PITCH"
 current_pitch$[2] = "NEUTRALISED PITCH"
-#########################
-# MAIN EDITTING ROUTINE #
-#########################
+
+########################
+# MAIN EDITING ROUTINE #
+########################
 for curr_sound to numberOfSounds
     # declare / reset remove pitch if toggle pitch not set
     if edit_choice != 1
