@@ -53,8 +53,8 @@
 form Text grid editor: Choose Directory
     sentence directory test folder
     word defaultSoundFile .wav
-    sentence resynthesis_directory resynth
-    word resynthesis_file_prefix RS_
+    sentence resynthesis_directory
+    word resynthesis_file_prefix
     endform
 # correct form errors
 if left$(defaultSoundFile$, 1) != "."
