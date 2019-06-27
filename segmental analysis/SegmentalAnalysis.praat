@@ -1,5 +1,5 @@
-# SCRIPT FOR EXTRACTING DURATIONAL AND MEAN FORMANT VALUES
-# ========================================================
+# SCRIPT FOR EXTRACTING DURATIONAL AND MEAN FORMANT VALUES V1.01
+# ==============================================================
 # Written for Praat 6.0.40
 
 # script by Antoin Eoin Rodgers
@@ -90,6 +90,8 @@
 # 5. Please get in touch if you have any suggestions. (I am aware of a certain amount of redundancy
 #    in the vowel and consonant procedures. I will make this more efficient at a later date.)
 
+# UPDATES
+# V1.01: added version control to warn if incompatible version of Praat (pre v.6.x) is being used.
 ##USER INPUT
 form Segmental analysis script: formants and durations
     sentence directory
@@ -107,6 +109,16 @@ form Segmental analysis script: formants and durations
     comment Maximum formant frequency to extract five formants
     positive maximum_formant_Frequency_in_Hz 5000
 endform
+
+# check version compatibility
+version$ = praatVersion$
+if left$(version$, 1) != "6"
+    echo You are running Praat 'praatVersion$'.
+    ... 'newline$'This script is designed to run on Praat version 6.0.4
+    ... 'newline$'To run this script, update to the latest
+    ... version at praat.org
+	exit
+endif
 
 ## process input variables
 if right$(directory$, 1) <> "/" or right$(directory$, 1) <> "\"
