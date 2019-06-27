@@ -34,6 +34,7 @@
 #       a. The directory address ends in "/" "\" or nothing
 #       b. The sound file type is indicated with an initial "." or not
 # 3. Other errors may be caused by annotation errors.
+# 4. The script will provide a warning and exit if version earlier than Praat 6.x is used.
 
 # C. Running the Script
 # =====================
