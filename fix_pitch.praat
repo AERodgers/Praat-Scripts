@@ -1,5 +1,5 @@
-# FIX PITCH v 2.0
-# ================
+# FIX PITCH v 2.0.1
+# =================
 # Written for Praat 6.0.31
 
 # Antoin Eoin Rodgers
@@ -55,6 +55,10 @@
 #      2. RESYNTH folder: resynthesised wav files with the corrected F0.
 #      3. IMAGE folder: image showing original & corrected F0 with original spectrogram and textgrid,
 #      4. PITCH folder: pitch object for each utterance. (PO = original, PF = corrected)
+#
+# G. UPDATES
+#      2.0.1 Added version control to provide warning and stop script if running earlier version 
+#            of Praat (i.e. before 6.x.)
 
 #NB: TO USE "Xu_Smooth" you must:
 # 1. download "Prosody Pro" from http://www.homepages.ucl.ac.uk/~uclyyix/ProsodyPro/
@@ -102,9 +106,19 @@ form Automatic Annotation Script for fo tracking in Praat
     natural min_fo 75
     natural max_fo 500
     boolean search_directory_for_best_F0_range 1
-
 endform
 adjust_fo_range = search_directory_for_best_F0_range
+
+# check version compatibility
+version$ = praatVersion$
+if left$(version$, 1) != "6"
+    echo You are running Praat 'praatVersion$'.
+    ... 'newline$'This script is designed to run on Praat version 6.0.31 or later.
+    ... 'newline$'To run this script, update to the latest
+    ... version at praat.org
+	exit
+endif
+
 ### create directory path names
 outputPath$ = directory$ + "/" + output_dir$
 imagePath$ = directory$ + "/" + image_dir$

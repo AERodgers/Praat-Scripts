@@ -17,6 +17,10 @@
 #     - start and end time (seconds)
 #     - F0 draw type (hertz or semitrones re 100 Hz)
 #     - minimum and maximum F0 (in hertz or semitrones)
+#
+# UPDATES
+# 27/06/2019 Added version control to provide warning and stop script
+#            if running version of Praat earlier than 6.x.
 
 ###############
 # USER INPUTS #
@@ -39,6 +43,16 @@ form Draw spectrogram with single tier and pitch_object track
     real minimum_F0 75
     real maximum_F0 500
 endform
+
+# check version compatibility
+version$ = praatVersion$
+if left$(version$, 1) != "6"
+    echo You are running Praat 'praatVersion$'.
+    ... 'newline$'This script is designed to run on Praat version 6.0.40 or later.
+    ... 'newline$'To run this script, update to the latest
+    ... version at praat.org
+	exit
+endif
 
 ### correct F0 and time errors
 if minimum_F0 > maximum_F0

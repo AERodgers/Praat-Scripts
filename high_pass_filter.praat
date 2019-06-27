@@ -1,5 +1,5 @@
-# HIGH PASS FILTER
-# ================
+# HIGH PASS FILTER v.1.0.1
+# =========================
 # Written for Praat 6.0.31
 
 # script by Antoin Eoin Rodgers
@@ -11,6 +11,11 @@
 # specified folder to remove low-frequency noise from 0 Hz to 
 # specfied lowest pass frequency.
 # DOES NOT CREATE BACKUPS!
+
+# UPDATES
+# 1.0.01 Added version control to provide warning and stop script if running
+#        earlier version of Praat (i.e. before 6.x.)
+
 
 # UI INPUT
 form Batch passband filter
@@ -26,6 +31,16 @@ if left$(defaultSoundFile$, 1) != "."
 endif
 if right$(directory$, 1) != "/" or right$(directory$, 1) != "\"
     directory$ += "/"
+endif
+
+# check version compatibility
+version$ = praatVersion$
+if left$(version$, 1) != "6"
+    echo You are running Praat 'praatVersion$'.
+    ... 'newline$'This script is designed to run on Praat version 6.0.31 or later.
+    ... 'newline$'To run this script, update to the latest
+    ... version at praat.org
+	exit
 endif
 
 writeInfoLine: "Filtering sound files in: """, directory$, """"
