@@ -1,5 +1,5 @@
-# SCRIPT FOR EXTRACTING DURATIONAL AND MEAN FORMANT VALUES
-# ========================================================
+# SCRIPT FOR EXTRACTING DURATIONAL AND MEAN FORMANT VALUES V1.01
+# ==============================================================
 # Written for Praat 6.0.40
 
 # script by Antoin Eoin Rodgers
@@ -34,6 +34,7 @@
 #       a. The directory address ends in "/" "\" or nothing
 #       b. The sound file type is indicated with an initial "." or not
 # 3. Other errors may be caused by annotation errors.
+# 4. The script will provide a warning and exit if version earlier than Praat 6.x is used.
 
 # C. Running the Script
 # =====================
@@ -89,3 +90,7 @@
 # 4. There may be other errors. Please make sure you are happy with the results this script provides.
 # 5. Please get in touch if you have any suggestions. (I am aware of a certain amount of redundancy
 #    in the vowel and consonant procedures. I will make this more efficient at a later date.)
+
+# UPDATES
+# V1.01: added version control to warn if incompatible version of Praat (pre v.6.x) is being used.
+##USER INPUT
