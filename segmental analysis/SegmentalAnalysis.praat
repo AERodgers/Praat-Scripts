@@ -112,10 +112,9 @@ form Segmental analysis script: formants and durations
 endform
 
 # check version compatibility
-version$ = praatVersion$
-if left$(version$, 1) != "6"
+if number(left$(praatVersion$, 1)) < 6
     echo You are running Praat 'praatVersion$'.
-    ... 'newline$'This script is designed to run on Praat version 6.0.4
+    ... 'newline$'This version of Praat is out of date.
     ... 'newline$'To run this script, update to the latest
     ... version at praat.org
 	exit
@@ -365,4 +364,3 @@ procedure getConsonantData: .gridTable, .file$
     Remove
 
 endproc
-
