@@ -16,7 +16,8 @@
     #
     # Input: 1. sound waveform and textgrid with specifier tier for analysis.
     #        2. user specified min and max F0 (Hz) for pitch estimation (AC)
-    #        3. Legend preferences
+    #        3. image title
+    #        3. legend preferences
     #
     # Main Procedure:
     # This simply calcuates mean values and linear slopes of the contours. It
@@ -61,6 +62,8 @@ form F0 and Intensity global declination analysis
     comment F0 parameters (in Hertz)
     natural minF0 75
     natural maxF0 450
+    comment Graphics options
+    sentence title
     choice legend_options 1
         button no legend
         button bottom left
@@ -70,6 +73,7 @@ form F0 and Intensity global declination analysis
 endform
 
 # fix legend options
+Font size: 10
 draw_legend = 1
 if legend_options = 1
     draw_legend = 0
@@ -91,11 +95,12 @@ else
 endif
 
 @declin: textgrid_object, text_grid_tier, sound_object,  minF0, maxF0,
-    ... draw_legend
+    ... title$, draw_legend
 @output
+Font size: 10
 
 ### Main Procedure
-procedure declin: .grid, .tier, .sound, .minF0, .maxF0, .draw_legend
+procedure declin: .grid, .tier, .sound, .minF0, .maxF0, .title$, .draw_legend
     # Get phrase start and end times
     selectObject: .grid
     .num_tiers = Get number of tiers
@@ -155,7 +160,7 @@ procedure declin: .grid, .tier, .sound, .minF0, .maxF0, .draw_legend
     @drawStuff: .sound, .pitchTable, .dBTable, .startT, .endT, .minF0, .maxF0,
         ... .pitch_min, .pitch_max, .startF0, .endF0,
         ... .dB_min, .dB_max, .dBStart, .dBEnd,
-        ... .draw_legend
+        ... .title$, .draw_legend
 
     # remove surplus objects
     selectObject: .pitchObj
@@ -173,7 +178,7 @@ endproc
 procedure drawStuff: .sound, .pitch, .dB, .startT, .endT, .minF0, .maxF0,
     ... .pitch_min, .pitch_max, .startF0, .endF0,
     ... .dB_min, .dB_max, .dBStart, .dBEnd,
-    ... .draw_legend
+    ... .title$, .draw_legend
 
     # set viewport and ink
     Erase all
@@ -259,6 +264,8 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT, .minF0, .maxF0,
     Line width: 1
     Marks bottom every: 1, 0.02, "no", "yes", "no"
     Text bottom: "yes", "Time (secs)"
+    Font size: 14
+    Text top: "yes", "##" + .title$
 
 endproc
 
