@@ -63,7 +63,12 @@ endform
 procedure declin: .grid, .tier, .sound, .minF0, .maxF0
     # Get phrase start and end times
     selectObject: .grid
-    .temp_grid = Extract one tier: .tier
+    .num_tiers =Get number of tiers
+    if .num_tiers > 1
+        .temp_grid = Extract one tier: .tier
+    else
+        .temp_grid = Copy: "tempTier"
+    endif
     .gridTable = Down to Table: "no", 3, "no", "no"
     .num_rows = Get number of rows
     .startT = Get value: 1, "tmin"
