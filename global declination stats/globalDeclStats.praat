@@ -1,22 +1,21 @@
-# Utterance Global F0 and Intensity Declination Calculation (basic)
+# Utterance Global F0 and Intensity Declination Calculation (basic) 1.1
 # =================================================================
 # Written for Praat 6.x.x
 #
 # Antoin Eoin Rodgers
 # rodgeran at tcd dot ie
 # Phonetics and speech Laboratory, Trinity College Dublin
-# Sept 13 2019
+# Sept 13 2019 - Sept 27 2019
 
 # INFO
     # This script is designed to get some global F0 and intensity parameters
-    # from an sound file containing a single utterence.
+    # from a sound file containing a single utterence.
     #
     # The main procedure calculates slope, mean, linear max and min values for
     # pitch and intensity across a complete utterance.
     #
-    # Input: 1. sound waveform and textgrid with single interval tier showing
-    #           start and end of the utterance (enter number on object window)
-    #        2. User specified min and max F0 (Hz) for pitch estimation (AC)
+    # Input: 1. sound waveform and textgrid with specified tier for analysis.
+    #        2. user specified min and max F0 (Hz) for pitch estimation (AC)
     #
     # Main Procedure:
     # This simply calcuates mean values and linear slopes of the contours. It
@@ -25,9 +24,15 @@
     # but this script was written for very basic analysis purposes.
     #
     # Caveats:
-    # The UI is also quite crude and as is the output procedure.
-    # The main procedure will also not run without the other procedures listed
-    # under "### DEPENDENCIES".
+    # The code assumes that there is only one utterance per sound file.
+    # It takes the start time as the beginning of the first interval containing
+    # text, and the end time as the offset as the end of the last segment
+    # containing text.
+    #
+    # The UI is also quite crude as is the output procedure.
+    #
+    # If adapting the procedure, the main procedure will also not run without
+    # the other procedures listed below the "DEPENDENCIES" section.
     # The script can be adapted to make this more useful (e.g. batch analysis
     # and table-form output), but I was feeling too lazy to do that at the time.
     # Maybe later!
@@ -44,22 +49,31 @@ endif
 ### UI
 form F0 and Intensity global declination analysis
     natural textgrid_object 1
+    natural text_grid_tier 1
     natural sound_object 2
     comment F0 parameters (in Hertz)
-    natural minF0 50
+    natural minF0 75
     natural maxF0 450
 endform
 
-@declin: textgrid_object, sound_object,  minF0, maxF0
+@declin: textgrid_object, text_grid_tier, sound_object,  minF0, maxF0
 @output
 
 ### Main Procedure
-procedure declin: .grid, .sound, .minF0, .maxF0
+procedure declin: .grid, .tier, .sound, .minF0, .maxF0
     # Get phrase start and end times
     selectObject: .grid
+    .num_tiers = Get number of tiers
+    if .num_tiers > 1
+        .temp_grid = Extract one tier: .tier
+    else
+        .temp_grid = Copy: "tempTier"
+    endif
     .gridTable = Down to Table: "no", 3, "no", "no"
+    .num_rows = Get number of rows
     .startT = Get value: 1, "tmin"
-    .endT = Get value: 1, "tmax"
+    .endT = Get value: .num_rows, "tmax"
+    plusObject: .temp_grid
     Remove
 
     # Get pitch Table
@@ -118,19 +132,29 @@ endproc
 ### output Procedure
 procedure output
     # output Pitch info
+declin.pitch_min = round(declin.pitch_min * 10) / 10
+declin.pitch_max = round(declin.pitch_max * 10) / 10
+declin.dB_min = round(declin.dB_min * 10) / 10
+declin.dB_max = round(declin.dB_max * 10) / 10
+
+
     writeInfoLine: "Pitch Info", newline$, "=========="
-    appendInfoLine: "Linear F0 slope:    ", declin.pitch_slope, " ST/sec"
-    appendInfoLine: "Linear F0 at start: ", declin.startF0, " ST re 100 Hz"
-    appendInfoLine: "Linear F0 at end:   ", declin.endF0, " ST re 100 Hz"
-    appendInfoLine: "Mean F0:            ", declin.pitch_yMean, " ST re 100 Hz"
+    appendInfoLine: "Mean F0 (ST re 100 Hz)             ", declin.pitch_yMean
+    appendInfoLine: "Minimum F0 (ST re 100 Hz)          ", declin.pitch_min
+    appendInfoLine: "Maximum F0 (ST re 100 Hz)          ", declin.pitch_max
+    appendInfoLine: "Linear F0 slope (ST/sec):          ", declin.pitch_slope
+    appendInfoLine: "Linear F0 at start (ST re 100 Hz): ", declin.startF0
+    appendInfoLine: "Linear F0 at end (ST re 100 Hz):   ", declin.endF0
 
     # output Intensity info
     appendInfoLine: ""
     appendInfoLine: "Intensity Info", newline$, "=============="
-    appendInfoLine: "Linear intensity slope:", declin.dB_slope," dB/sec"
-    appendInfoLine: "Linear dB at start:    ", declin.dBStart, " dB"
-    appendInfoLine: "Linear dB at end:      ", declin.dBEnd, " dB"
-    appendInfoLine: "Mean dB:               ", declin.dB_yMean, " dB"
+    appendInfoLine: "Mean dB:                         ", declin.dB_yMean
+    appendInfoLine: "Minimum dB:                      ", declin.dB_min
+    appendInfoLine: "Maximum dB:                      ", declin.dB_max
+    appendInfoLine: "Linear intensity slope: (dB/sec) ", declin.dB_slope
+    appendInfoLine: "Linear dB at start:              ", declin.dBStart
+    appendInfoLine: "Linear dB at end:                ", declin.dBEnd
 
 ### DEPENDENCIES
 
@@ -156,6 +180,8 @@ procedure tableStats: .var$, .table, .colX$, .colY$
     if .numRows > 1
 		'.var$'stDevY = Get standard deviation: .colY$
 		'.var$'stDevX = Get standard deviation: .colX$
+        '.var$'min = Get minimum: .colY$
+		'.var$'max = Get maximum: .colY$
 		.linear_regression = To linear regression
 		.linear_regression$ = Info
 		'.var$'slope = extractNumber (.linear_regression$, "Coefficient of factor '.colX$': ")
@@ -167,6 +193,8 @@ procedure tableStats: .var$, .table, .colX$, .colY$
 	else
 		'.var$'stDevY = undefined
 		'.var$'stDevX = undefined
+        '.var$'min = undefined
+		'.var$'max = undefined
 		'.var$'linear_regression = undefined
 		'.var$'linear_regression$ = "N/A"
 		'.var$'slope = undefined
