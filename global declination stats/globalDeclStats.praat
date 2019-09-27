@@ -1,4 +1,4 @@
-# Utterance Global F0 and Intensity Declination Calculation (basic) 1.2
+# Utterance Global F0 and Intensity Declination Calculation (basic) 1.2.2
 # =================================================================
 # Written for Praat 6.x.x
 #
@@ -43,7 +43,10 @@
     # The script can be adapted to make this more useful (e.g. batch analysis
     # and table-form output), but I was feeling too lazy to do that at the time.
     # Maybe later!
-    # 1.2 - added graphical output
+    # 1.2   - added graphical output
+    # 1.2.2 - contour will now correctly (I hope) not draw contour across un-
+    #         voiced sections of the F0 (or intensity) contour, increased max dB
+    #         to 90 dB
 
 ### Praat version checker
 if number(left$(praatVersion$, 1)) < 6
@@ -201,14 +204,14 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT, .minF0, .maxF0,
     Axes: .startT, .endT, log2(.minF0/100)*12, log2(.maxF0/100)*12
     White
     Line width: 6
-    @draw_table_line: .pitch, "Time", "F0", .startT, .endT, 0
+    @draw_table_line: .pitch, "Time", "F0", .startT, .endT, 1
     Line width: 4
     Draw line: .startT, .pitch_min, .endT, .pitch_max
 
     # draw white dB lines
-    Axes: .startT, .endT, 30, 80
+    Axes: .startT, .endT, 30, 90
     Line width: 6
-    @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 0
+    @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 1
     Line width: 4
     Draw line: .startT, .dBStart, .endT, .dBEnd
 
@@ -227,7 +230,7 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT, .minF0, .maxF0,
     Draw line: .startT, .pitch_min, .endT, .pitch_max
 
     # draw coloured dB lines
-    Axes: .startT, .endT, 30, 80
+    Axes: .startT, .endT, 30, 90
     Solid line
     Line width: 4
     Green
@@ -252,7 +255,7 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT, .minF0, .maxF0,
     Text left: "yes", "Frequency (ST re 100 Hz)"
 
     # mark dB Frequencies
-    Axes: .startT, .endT, 30, 80
+    Axes: .startT, .endT, 30, 90
     Line width: 2
     Marks right every: 1, 5, "yes", "yes", "no"
     Line width: 1
@@ -533,6 +536,7 @@ procedure draw_table_line: .tableObj, .xCol$, .yCol$, .x_axis_min, .x_axis_max,
         ... .ignore_zeros
     selectObject: .tableObj
     .rows_tot = Get number of rows
+    @delta: .tableObj
     for .i to .rows_tot - 1
         .x  = Get value: .i, .xCol$
         .y = Get value: .i, .yCol$
@@ -543,8 +547,43 @@ procedure draw_table_line: .tableObj, .xCol$, .yCol$, .x_axis_min, .x_axis_max,
         if not .ignore_zeros or (.y != 0 and .y_next != 0)
             if .x >= .x_axis_min and .x_next <= .x_axis_max
                     ... and allDefined
+                    ... and round((.x_next - .x)*100)/100 = delta.x
                  Draw line: .x, .y, .x_next, .y_next
             endif
+        endif
+    endfor
+endproc
+
+procedure delta: .table
+    selectObject: .table
+    Append column: "deltaX"
+
+    .num_rows = Get number of rows
+
+    for .i to .num_rows - 1
+        .val1 = Get value: .i, "Time"
+        .val2 = Get value: .i+1, "Time"
+        Set numeric value: .i, "deltaX", .val2 - .val1
+    endfor
+    Set numeric value: .num_rows, "deltaX", .val2 - .val1
+    .deltaXMean = Get mean: "deltaX"
+    @find_nearest_table: .deltaXMean, .table, "deltaX"
+    .x = round(find_nearest_table.val*100)/100
+    Remove column: "deltaX"
+endproc
+
+procedure find_nearest_table: .input_var, .input_table, .input_col$
+    # NB: .input_array$ is the name of the input array as a string without the index references
+    .diff = 1e+100
+	selectObject: .input_table
+	.num_rows = Get number of rows
+    for .i to .num_rows
+        .val_cur = Get value: .i, .input_col$
+        .diff_cur = abs(.input_var - .val_cur)
+        if .diff_cur < .diff
+            .diff = .diff_cur
+            .val = .val_cur
+            .index = .i
         endif
     endfor
 endproc
