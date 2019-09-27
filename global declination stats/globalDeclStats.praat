@@ -1,4 +1,4 @@
-# Utterance Global F0 and Intensity Declination Calculation (basic) 1.1
+# Utterance Global F0 and Intensity Declination Calculation (basic) 1.2
 # =================================================================
 # Written for Praat 6.x.x
 #
@@ -14,14 +14,20 @@
     # The main procedure calculates slope, mean, linear max and min values for
     # pitch and intensity across a complete utterance.
     #
-    # Input: 1. sound waveform and textgrid with specified tier for analysis.
+    # Input: 1. sound waveform and textgrid with specifier tier for analysis.
     #        2. user specified min and max F0 (Hz) for pitch estimation (AC)
+    #        3. Legend preferences
     #
     # Main Procedure:
     # This simply calcuates mean values and linear slopes of the contours. It
     # then projects the values of the slopes onto the start and end times of the
     # utterance. There are more sophisticated ways to implement such analyses,
     # but this script was written for very basic analysis purposes.
+    #
+    # Output:
+    #     1. Info window shows F0 and dB stats
+    #     2. Graph with spectrogram, F0 and dB contours along with linear
+    #       regression lines
     #
     # Caveats:
     # The code assumes that there is only one utterance per sound file.
@@ -36,6 +42,7 @@
     # The script can be adapted to make this more useful (e.g. batch analysis
     # and table-form output), but I was feeling too lazy to do that at the time.
     # Maybe later!
+    # 1.2 - added graphical output
 
 ### Praat version checker
 if number(left$(praatVersion$, 1)) < 6
@@ -54,13 +61,41 @@ form F0 and Intensity global declination analysis
     comment F0 parameters (in Hertz)
     natural minF0 75
     natural maxF0 450
+    choice legend_options 1
+        button no legend
+        button bottom left
+        button bottom right
+        button top left
+        button top right
 endform
 
-@declin: textgrid_object, text_grid_tier, sound_object,  minF0, maxF0
+# fix legend options
+draw_legend = 1
+if legend_options = 1
+    draw_legend = 0
+    hor = 0
+    vert = 0
+elsif legend_options = 2
+    hor = 0
+    vert = 0
+elsif legend_options = 3
+    hor = 1
+    vert = 0
+elsif legend_options = 4
+    hor = 0
+    vert = 1
+else
+    legend_options = 5
+    hor = 1
+    vert = 1
+endif
+
+@declin: textgrid_object, text_grid_tier, sound_object,  minF0, maxF0,
+    ... draw_legend
 @output
 
 ### Main Procedure
-procedure declin: .grid, .tier, .sound, .minF0, .maxF0
+procedure declin: .grid, .tier, .sound, .minF0, .maxF0, .draw_legend
     # Get phrase start and end times
     selectObject: .grid
     .num_tiers = Get number of tiers
@@ -117,6 +152,11 @@ procedure declin: .grid, .tier, .sound, .minF0, .maxF0
     .dBStart = round(.dBStart*10)/10
     .dBEnd = round(.dBEnd*10)/10
 
+    @drawStuff: .sound, .pitchTable, .dBTable, .startT, .endT, .minF0, .maxF0,
+        ... .pitch_min, .pitch_max, .startF0, .endF0,
+        ... .dB_min, .dB_max, .dBStart, .dBEnd,
+        ... .draw_legend
+
     # remove surplus objects
     selectObject: .pitchObj
     plusObject: .pitchTier
@@ -130,12 +170,197 @@ procedure declin: .grid, .tier, .sound, .minF0, .maxF0
 endproc
 
 ### output Procedure
+procedure drawStuff: .sound, .pitch, .dB, .startT, .endT, .minF0, .maxF0,
+    ... .pitch_min, .pitch_max, .startF0, .endF0,
+    ... .dB_min, .dB_max, .dBStart, .dBEnd,
+    ... .draw_legend
+
+    # set viewport and ink
+    Erase all
+
+    Black
+    Line width: 1
+    Select outer viewport: 0, 6, 0, 4
+
+    selectObject: .sound
+    To Spectrogram: 0.005, 5000, 0.002, 20, "Gaussian"
+    Paint: .startT, .endT, 0, 5000, 100, "yes", 50, 6, 0, "no"
+    Remove
+
+    if .draw_legend
+        @draw_legend: hor, vert
+    endif
+
+    # draw white F0 lines
+    selectObject: .pitch
+    Axes: .startT, .endT, log2(.minF0/100)*12, log2(.maxF0/100)*12
+    White
+    Line width: 6
+    @draw_table_line: .pitch, "Time", "F0", .startT, .endT, 0
+    Line width: 4
+    Draw line: .startT, .pitch_min, .endT, .pitch_max
+
+    # draw white dB lines
+    Axes: .startT, .endT, 30, 80
+    Line width: 6
+    @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 0
+    Line width: 4
+    Draw line: .startT, .dBStart, .endT, .dBEnd
+
+    # draw coloured F0 lines
+    Axes: .startT, .endT, log2(.minF0/100)*12, log2(.maxF0/100)*12
+    Solid line
+    Line width: 4
+    Cyan
+    @draw_table_line: .pitch, "Time", "F0", .startT, .endT, 0
+    Black
+    Dotted line
+    @draw_table_line: .pitch, "Time", "F0", .startT, .endT, 0
+    Solid line
+    Cyan
+    Line width: 2
+    Draw line: .startT, .pitch_min, .endT, .pitch_max
+
+    # draw coloured dB lines
+    Axes: .startT, .endT, 30, 80
+    Solid line
+    Line width: 4
+    Green
+    @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 0
+    Black
+    Dotted line
+    @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 0
+    Solid line
+    Green
+    Line width: 2
+    Draw line: .startT, .dBStart, .endT, .dBEnd
+
+    Line width: 1
+    Select outer viewport: 0, 6, 0, 4
+    Draw inner box
+    # mark F0 Frequencies
+    Axes: .startT, .endT, log2(.minF0/100)*12, log2(.maxF0/100)*12
+    Line width: 2
+    Marks left every: 1, 5, "yes", "yes", "no"
+    Line width: 1
+    Marks left every: 1, 1, "no", "yes", "no"
+    Text left: "yes", "Frequency (ST re 100 Hz)"
+
+    # mark dB Frequencies
+    Axes: .startT, .endT, 30, 80
+    Line width: 2
+    Marks right every: 1, 5, "yes", "yes", "no"
+    Line width: 1
+    Marks right every: 1, 1, "no", "yes", "no"
+    Text right: "yes", "Intensity (dB)"
+
+    Line width: 2
+    Marks bottom every: 1, 0.1, "yes", "yes", "no"
+    Line width: 1
+    Marks bottom every: 1, 0.02, "no", "yes", "no"
+    Text bottom: "yes", "Time (secs)"
+
+endproc
+
+procedure draw_legend: .hor, .vert
+    ### Draw Legend
+    Axes: 0, 1, 0, 1
+    .text_width = Text width (world coordinates): "intensity contour (dB)"
+    .x_unit = Horizontal mm to world coordinates: 4
+    .x_start = .x_unit
+    .x_end = 4.5 * .x_unit + .text_width
+    .y_unit  = Vertical mm to world coordinates: 4
+    y_start = .y_unit
+    .y_end = .y_unit * 6
+
+    if .hor
+        .x_end = 1 - .x_unit
+        .x_start = 1 - (4.5 * .x_unit + .text_width)
+    endif
+    if .vert
+        y_start = 1 - (.y_unit * 6)
+        .y_end = 1 - .y_unit
+    endif
+
+    # Draw legend background
+    Paint rectangle: 0.8, .x_start, .x_end,
+                 ... y_start,  .y_end
+    Black
+    Draw rectangle: .x_start, .x_end,
+                 ... y_start,  .y_end
+
+    # Draw legend text
+    Text: .x_start + 2.5 * .x_unit , "Left", y_start + .y_unit,
+        ... "Half", "intensity contour (dB)"
+    Text: .x_start + 2.5 * .x_unit, "Left", y_start + .y_unit * 2, "Half",
+        ... "F0 contour (ST)"
+    Text: .x_start + 2.5 * .x_unit, "Left", y_start + .y_unit * 3,
+        ... "Half", "F0 Linear regression"
+    Text: .x_start + 2.5 * .x_unit, "Left", y_start + .y_unit * 4,
+        ... "Half", "dB Linear regression"
+
+    #F0 contour
+    Solid line
+    Line width: 6
+    Colour: "White"
+    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit,
+        ... .x_start + 2 * .x_unit, y_start + .y_unit
+    Line width: 4
+    Colour: "Cyan"
+    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit,
+        ... .x_start + 2 * .x_unit, y_start + .y_unit
+    Line width: 2
+    Dotted line
+    Colour: "Black"
+    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit,
+        ... .x_start + 2 * .x_unit, y_start + .y_unit
+
+    # dB contour
+    Line width: 6
+    Solid line
+    Colour: "White"
+    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit * 2,
+        ... .x_start + 2 * .x_unit, y_start + .y_unit * 2
+    Line width: 4
+    Colour: "Green"
+    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit * 2,
+        ... .x_start + 2 * .x_unit, y_start + .y_unit * 2
+    Line width: 2
+    Dotted line
+    Colour: "Black"
+    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit * 2,
+        ... .x_start + 2 * .x_unit, y_start + .y_unit * 2
+
+    #F0 Linear
+    Line width: 4
+    Solid line
+    Colour: "White"
+    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit * 3,
+        ... .x_start + 2 * .x_unit, y_start + .y_unit * 3
+    Line width: 2
+    Colour: "Cyan"
+    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit * 3,
+        ... .x_start + 2 * .x_unit, y_start + .y_unit * 3
+
+    # dB contour
+    Line width: 4
+    Solid line
+    Colour: "White"
+    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit * 4,
+        ... .x_start + 2 * .x_unit, y_start + .y_unit * 4
+    Line width: 2
+    Colour: "Green"
+    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit * 4,
+        ... .x_start + 2 * .x_unit, y_start + .y_unit * 4
+endproc
+
+
 procedure output
     # output Pitch info
-declin.pitch_min = round(declin.pitch_min * 10) / 10
-declin.pitch_max = round(declin.pitch_max * 10) / 10
-declin.dB_min = round(declin.dB_min * 10) / 10
-declin.dB_max = round(declin.dB_max * 10) / 10
+    declin.pitch_min = round(declin.pitch_min * 10) / 10
+    declin.pitch_max = round(declin.pitch_max * 10) / 10
+    declin.dB_min = round(declin.dB_min * 10) / 10
+    declin.dB_max = round(declin.dB_max * 10) / 10
 
 
     writeInfoLine: "Pitch Info", newline$, "=========="
@@ -155,6 +380,7 @@ declin.dB_max = round(declin.dB_max * 10) / 10
     appendInfoLine: "Linear intensity slope: (dB/sec) ", declin.dB_slope
     appendInfoLine: "Linear dB at start:              ", declin.dBStart
     appendInfoLine: "Linear dB at end:                ", declin.dBEnd
+endproc
 
 ### DEPENDENCIES
 
@@ -184,9 +410,11 @@ procedure tableStats: .var$, .table, .colX$, .colY$
 		'.var$'max = Get maximum: .colY$
 		.linear_regression = To linear regression
 		.linear_regression$ = Info
-		'.var$'slope = extractNumber (.linear_regression$, "Coefficient of factor '.colX$': ")
+		'.var$'slope = extractNumber (.linear_regression$,
+            ... "Coefficient of factor '.colX$': ")
 		'.var$'intercept = extractNumber (.linear_regression$, "Intercept: ")
-		'.var$'r = round('.var$'slope * '.var$'stDevX / '.var$'stDevY * 1000) / 1000
+		'.var$'r = round('.var$'slope * '.var$'stDevX / '.var$'stDevY * 1000)
+            ... / 1000
 		selectObject: .linear_regression
 		.info$ = Info
 		Remove
@@ -287,7 +515,29 @@ procedure list2array: .list$, .array$
     if .n = 1
         '.array$'[.n] = .list$
     else
-        '.array$'[.n] = mid$(.list$, .prev_start, .list_length - .prev_start + 1)
+        '.array$'[.n] = mid$(.list$, .prev_start, .list_length -
+            ... .prev_start + 1)
     endif
     .origIndex[.n] = .prev_start
+endproc
+
+
+procedure draw_table_line: .tableObj, .xCol$, .yCol$, .x_axis_min, .x_axis_max,
+        ... .ignore_zeros
+    selectObject: .tableObj
+    .rows_tot = Get number of rows
+    for .i to .rows_tot - 1
+        .x  = Get value: .i, .xCol$
+        .y = Get value: .i, .yCol$
+        .x_next  = Get value: .i+1, .xCol$
+        .y_next = Get value: .i+1, .yCol$
+		allDefined = .x != undefined and .x_next != undefined
+		     ... and .y != undefined and .y_next != undefined
+        if not .ignore_zeros or (.y != 0 and .y_next != 0)
+            if .x >= .x_axis_min and .x_next <= .x_axis_max
+                    ... and allDefined
+                 Draw line: .x, .y, .x_next, .y_next
+            endif
+        endif
+    endfor
 endproc
