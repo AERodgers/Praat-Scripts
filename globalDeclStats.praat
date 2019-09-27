@@ -9,7 +9,7 @@
 
 # INFO
     # This script is designed to get some global F0 and intensity parameters
-    # from an sound file containing a single utterence.
+    # from a sound file containing a single utterence.
     #
     # The main procedure calculates slope, mean, linear max and min values for
     # pitch and intensity across a complete utterance.
@@ -127,17 +127,27 @@ endproc
 ### output Procedure
 procedure output
     # output Pitch info
+declin.pitch_min = round(declin.pitch_min * 10) / 10
+declin.pitch_max = round(declin.pitch_max * 10) / 10
+declin.dB_min = round(declin.dB_min * 10) / 10
+declin.dB_max = round(declin.dB_max * 10) / 10
+
+
     writeInfoLine: "Pitch Info", newline$, "=========="
-    appendInfoLine: "Linear F0 slope (ST/sec):          ", declin.pitch_slope
     appendInfoLine: "Mean F0 (ST re 100 Hz)             ", declin.pitch_yMean
+    appendInfoLine: "Minimum F0 (ST re 100 Hz)          ", declin.pitch_min
+    appendInfoLine: "Maximum F0 (ST re 100 Hz)          ", declin.pitch_max
+    appendInfoLine: "Linear F0 slope (ST/sec):          ", declin.pitch_slope
     appendInfoLine: "Linear F0 at start (ST re 100 Hz): ", declin.startF0
     appendInfoLine: "Linear F0 at end (ST re 100 Hz):   ", declin.endF0
 
     # output Intensity info
     appendInfoLine: ""
     appendInfoLine: "Intensity Info", newline$, "=============="
-    appendInfoLine: "Linear intensity slope: (dB/sec) ", declin.dB_slope
     appendInfoLine: "Mean dB:                         ", declin.dB_yMean
+    appendInfoLine: "Minimum dB:                      ", declin.dB_min
+    appendInfoLine: "Maximum dB:                      ", declin.dB_max
+    appendInfoLine: "Linear intensity slope: (dB/sec) ", declin.dB_slope
     appendInfoLine: "Linear dB at start:              ", declin.dBStart
     appendInfoLine: "Linear dB at end:                ", declin.dBEnd
 
@@ -165,6 +175,8 @@ procedure tableStats: .var$, .table, .colX$, .colY$
     if .numRows > 1
 		'.var$'stDevY = Get standard deviation: .colY$
 		'.var$'stDevX = Get standard deviation: .colX$
+        '.var$'min = Get minimum: .colY$
+		'.var$'max = Get maximum: .colY$
 		.linear_regression = To linear regression
 		.linear_regression$ = Info
 		'.var$'slope = extractNumber (.linear_regression$, "Coefficient of factor '.colX$': ")
@@ -176,6 +188,8 @@ procedure tableStats: .var$, .table, .colX$, .colY$
 	else
 		'.var$'stDevY = undefined
 		'.var$'stDevX = undefined
+        '.var$'min = undefined
+		'.var$'max = undefined
 		'.var$'linear_regression = undefined
 		'.var$'linear_regression$ = "N/A"
 		'.var$'slope = undefined
