@@ -45,8 +45,8 @@
     # Maybe later!
     # 1.2   - added graphical output
     # 1.2.2 - contour will now correctly (I hope) not draw contour across un-
-    #         voiced sections of the F0 (or intensity) contour, increased max dB
-    #         to 90 dB
+    #         voiced sections of the F0 (or intensity) contour
+    #         dB range now user specified
 
 ### Praat version checker
 if number(left$(praatVersion$, 1)) < 6
@@ -65,8 +65,12 @@ form F0 and Intensity global declination analysis
     comment F0 parameters (in Hertz)
     natural minF0 75
     natural maxF0 450
+    comment Intensity parameters (in dB)
+    natural min_dB 30
+    natural max_dB 90
     comment Graphics options
     sentence title
+
     choice legend_options 1
         button no legend
         button bottom left
@@ -98,12 +102,14 @@ else
 endif
 
 @declin: textgrid_object, text_grid_tier, sound_object,  minF0, maxF0,
+    ... min_dB, max_dB,
     ... title$, draw_legend
 @output
 Font size: 10
 
 ### Main Procedure
-procedure declin: .grid, .tier, .sound, .minF0, .maxF0, .title$, .draw_legend
+procedure declin: .grid, .tier, .sound, .minF0, .maxF0, .min_dB, .max_dB,
+    ... .title$, .draw_legend
     # Get phrase start and end times
     selectObject: .grid
     .num_tiers = Get number of tiers
@@ -160,9 +166,9 @@ procedure declin: .grid, .tier, .sound, .minF0, .maxF0, .title$, .draw_legend
     .dBStart = round(.dBStart*10)/10
     .dBEnd = round(.dBEnd*10)/10
 
-    @drawStuff: .sound, .pitchTable, .dBTable, .startT, .endT, .minF0, .maxF0,
-        ... .pitch_min, .pitch_max, .startF0, .endF0,
-        ... .dB_min, .dB_max, .dBStart, .dBEnd,
+    @drawStuff: .sound, .pitchTable, .dBTable, .startT, .endT,
+        ... .minF0, .maxF0, .startF0, .endF0,
+        ... .min_dB, .max_dB, .dBStart, .dBEnd,
         ... .title$, .draw_legend
 
     # remove surplus objects
@@ -178,9 +184,9 @@ procedure declin: .grid, .tier, .sound, .minF0, .maxF0, .title$, .draw_legend
 endproc
 
 ### output Procedure
-procedure drawStuff: .sound, .pitch, .dB, .startT, .endT, .minF0, .maxF0,
-    ... .pitch_min, .pitch_max, .startF0, .endF0,
-    ... .dB_min, .dB_max, .dBStart, .dBEnd,
+procedure drawStuff: .sound, .pitch, .dB, .startT, .endT,
+    ... .minF0, .maxF0, .startF0, .endF0,
+    ... .min_dB, .max_dB, .dBStart, .dBEnd,
     ... .title$, .draw_legend
 
     # set viewport and ink
@@ -206,10 +212,10 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT, .minF0, .maxF0,
     Line width: 6
     @draw_table_line: .pitch, "Time", "F0", .startT, .endT, 1
     Line width: 4
-    Draw line: .startT, .pitch_min, .endT, .pitch_max
+    Draw line: .startT, .startF0, .endT, .endF0
 
     # draw white dB lines
-    Axes: .startT, .endT, 30, 90
+    Axes: .startT, .endT, .min_dB, .max_dB
     Line width: 6
     @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 1
     Line width: 4
@@ -227,10 +233,10 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT, .minF0, .maxF0,
     Solid line
     Cyan
     Line width: 2
-    Draw line: .startT, .pitch_min, .endT, .pitch_max
+    Draw line: .startT, .startF0, .endT, .endF0
 
     # draw coloured dB lines
-    Axes: .startT, .endT, 30, 90
+    Axes: .startT, .endT, .min_dB, .max_dB
     Solid line
     Line width: 4
     Green
@@ -255,7 +261,7 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT, .minF0, .maxF0,
     Text left: "yes", "Frequency (ST re 100 Hz)"
 
     # mark dB Frequencies
-    Axes: .startT, .endT, 30, 90
+    Axes: .startT, .endT, .min_dB, .max_dB
     Line width: 2
     Marks right every: 1, 5, "yes", "yes", "no"
     Line width: 1
