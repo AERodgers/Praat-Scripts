@@ -268,6 +268,8 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT,
     Marks right every: 1, 1, "no", "yes", "no"
     Text right: "yes", "Intensity (dB)"
 
+    Axes: 0, .endT - .startT, .min_dB, .max_dB
+
     Line width: 2
     Marks bottom every: 1, 0.1, "yes", "yes", "no"
     Line width: 1
