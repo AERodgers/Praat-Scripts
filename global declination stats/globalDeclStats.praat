@@ -54,7 +54,7 @@ if number(left$(praatVersion$, 1)) < 6
     ... 'newline$'This version of Praat is out of date.
     ... 'newline$'To run this script, update to the latest
     ... version at praat.org
-	exit
+    exit
 endif
 
 ### UI
@@ -409,49 +409,49 @@ endproc
 
 procedure tableStats: .var$, .table, .colX$, .colY$
     @keepCols: .table, "'.colX$' '.colY$'", "tableStats.shortTable"
-	.numRows = Get number of rows
-	.factor$ = Get column label: 1
-	if .colX$ != .factor$
+    .numRows = Get number of rows
+    .factor$ = Get column label: 1
+    if .colX$ != .factor$
         appendInfoLine: .colX$, " != ", .factor$
-		@table2array: .shortTable, .colY$, "tableStats.colTemp$"
-		Remove column: .colY$
-		Append column: .colY$
-		for .i to table2array.n
-		    Set string value: .i, .colY$, .colTemp$[.i]
-		endfor
-	endif
+    @table2array: .shortTable, .colY$, "tableStats.colTemp$"
+    Remove column: .colY$
+    Append column: .colY$
+    for .i to table2array.n
+        Set string value: .i, .colY$, .colTemp$[.i]
+    endfor
+    endif
 
     if .numRows > 1
-		'.var$'stDevY = Get standard deviation: .colY$
-		'.var$'stDevX = Get standard deviation: .colX$
+    '.var$'stDevY = Get standard deviation: .colY$
+    '.var$'stDevX = Get standard deviation: .colX$
         '.var$'min = Get minimum: .colY$
-		'.var$'max = Get maximum: .colY$
-		.linear_regression = To linear regression
-		.linear_regression$ = Info
-		'.var$'slope = extractNumber (.linear_regression$,
+    '.var$'max = Get maximum: .colY$
+    .linear_regression = To linear regression
+    .linear_regression$ = Info
+    '.var$'slope = extractNumber (.linear_regression$,
             ... "Coefficient of factor '.colX$': ")
-		'.var$'intercept = extractNumber (.linear_regression$, "Intercept: ")
-		'.var$'r = round('.var$'slope * '.var$'stDevX / '.var$'stDevY * 1000)
+    '.var$'intercept = extractNumber (.linear_regression$, "Intercept: ")
+    '.var$'r = round('.var$'slope * '.var$'stDevX / '.var$'stDevY * 1000)
             ... / 1000
-		selectObject: .linear_regression
-		.info$ = Info
-		Remove
-	else
-		'.var$'stDevY = undefined
-		'.var$'stDevX = undefined
+    selectObject: .linear_regression
+    .info$ = Info
+    Remove
+    else
+    '.var$'stDevY = undefined
+    '.var$'stDevX = undefined
         '.var$'min = undefined
-		'.var$'max = undefined
-		'.var$'linear_regression = undefined
-		'.var$'linear_regression$ = "N/A"
-		'.var$'slope = undefined
-		'.var$'intercept = Get value: 1, .colY$
-		'.var$'r = undefined
-		.info$ = "N/A"
-	endif
+    '.var$'max = undefined
+    '.var$'linear_regression = undefined
+    '.var$'linear_regression$ = "N/A"
+    '.var$'slope = undefined
+    '.var$'intercept = Get value: 1, .colY$
+    '.var$'r = undefined
+    .info$ = "N/A"
+    endif
 
-	selectObject: .shortTable
+    selectObject: .shortTable
 
-	'.var$'xMean = Get mean: .colX$
+    '.var$'xMean = Get mean: .colX$
     '.var$'xMed = Get quantile: .colX$, 0.5
     '.var$'yMean = Get mean: .colY$
     '.var$'yMed = Get quantile: .colY$, 0.5
@@ -466,7 +466,7 @@ procedure tableStats: .var$, .table, .colX$, .colY$
     '.var$'xMed = round('.var$'xMed*10)/10
     '.var$'yMean = round('.var$'yMean*10)/10
     '.var$'yMed = round('.var$'yMed*10)/10
-	Remove
+    Remove
 endproc
 
 ### Table management procedures
@@ -550,8 +550,8 @@ procedure draw_table_line: .tableObj, .xCol$, .yCol$, .x_axis_min, .x_axis_max,
         .y = Get value: .i, .yCol$
         .x_next  = Get value: .i+1, .xCol$
         .y_next = Get value: .i+1, .yCol$
-		allDefined = .x != undefined and .x_next != undefined
-		     ... and .y != undefined and .y_next != undefined
+    allDefined = .x != undefined and .x_next != undefined
+         ... and .y != undefined and .y_next != undefined
         if not .ignore_zeros or (.y != 0 and .y_next != 0)
             if .x >= .x_axis_min and .x_next <= .x_axis_max
                     ... and allDefined
@@ -583,8 +583,8 @@ endproc
 procedure find_nearest_table: .input_var, .input_table, .input_col$
     # NB: .input_array$ is the name of the input array as a string without the index references
     .diff = 1e+100
-	selectObject: .input_table
-	.num_rows = Get number of rows
+    selectObject: .input_table
+    .num_rows = Get number of rows
     for .i to .num_rows
         .val_cur = Get value: .i, .input_col$
         .diff_cur = abs(.input_var - .val_cur)
