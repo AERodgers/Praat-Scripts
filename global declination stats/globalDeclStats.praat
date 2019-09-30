@@ -1,5 +1,5 @@
-# Utterance Global F0 and Intensity Declination Calculation (basic) 1.2.2
-# =================================================================
+# Utterance Global F0 and Intensity Declination Calculation (basic) 1.3.1
+# =======================================================================
 # Written for Praat 6.x.x
 #
 # Antoin Eoin Rodgers
@@ -16,8 +16,10 @@
     #
     # Input: 1. sound waveform and textgrid with specifier tier for analysis.
     #        2. user specified min and max F0 (Hz) for pitch estimation (AC)
-    #        3. image title
-    #        3. legend preferences
+    #        3. user specified min and max dB (Hz) for intensity
+    #        4. image title
+    #        5. contour prefereces
+    #        6. legend preferences
     #
     # Main Procedure:
     # This simply calcuates mean values and linear slopes of the contours. It
@@ -27,8 +29,8 @@
     #
     # Output:
     #     1. Info window shows F0 and dB stats
-    #     2. Graph with spectrogram, F0 and dB contours along with linear
-    #       regression lines
+    #     2. Graph with spectrogram, F0 and dB contours along with linear re-
+    #        gression lines, and upper/lower F0 linear regression (as per input)
     #
     # Caveats:
     # The code assumes that there is only one utterance per sound file.
@@ -47,6 +49,14 @@
     # 1.2.2 - contour will now correctly (I hope) not draw contour across un-
     #         voiced sections of the F0 (or intensity) contour
     #         dB range now user specified
+    # 1.3.1 - added option to draw upper and lower F0 regression lines as per
+    #         Haan (2002)
+    #       - created more intelligent legend legend_options
+    #       - added option to include only F0 or dB contours in menu
+    #
+    # REFERENCE
+    # Haan, J. (2002) Speaking of Questions - An Exploration of Dutch
+    #     Question Intonation. Utrecht: LOT.
 
 ### Praat version checker
 if number(left$(praatVersion$, 1)) < 6
@@ -66,11 +76,15 @@ form F0 and Intensity global declination analysis
     natural minF0 75
     natural maxF0 450
     comment Intensity parameters (in dB)
-    natural min_dB 30
-    natural max_dB 90
+    integer min_dB 30
+    integer max_dB 90
     comment Graphics options
     sentence title
-
+    choice contour_options 1
+        button F0 only
+        button F0 and intensity
+        button Intensity only
+    boolean draw_upper_and_lower_F0_regression 0
     choice legend_options 1
         button no legend
         button bottom left
@@ -79,6 +93,8 @@ form F0 and Intensity global declination analysis
         button top right
 endform
 
+
+haanLines = draw_upper_and_lower_F0_regression
 # fix legend options
 Font size: 10
 draw_legend = 1
@@ -101,15 +117,16 @@ else
     vert = 1
 endif
 
-@declin: textgrid_object, text_grid_tier, sound_object,  minF0, maxF0,
+@declin: textgrid_object, text_grid_tier, sound_object, minF0, maxF0,
     ... min_dB, max_dB,
-    ... title$, draw_legend
+    ... title$, draw_legend,
+    ... haanLines, contour_options, hor, vert
 @output
 Font size: 10
 
-### Main Procedure
+### MAIN PROCEDURE
 procedure declin: .grid, .tier, .sound, .minF0, .maxF0, .min_dB, .max_dB,
-    ... .title$, .draw_legend
+    ... .title$, .draw_legend, .haanLines, .contour_options, .hor, .vert
     # Get phrase start and end times
     selectObject: .grid
     .num_tiers = Get number of tiers
@@ -126,14 +143,7 @@ procedure declin: .grid, .tier, .sound, .minF0, .maxF0, .min_dB, .max_dB,
     Remove
 
     # Get pitch Table
-    selectObject: .sound
-    .pitchObj = To Pitch (ac):
-        ... 0, .minF0, 15, "no", 0.03, 0.45, 0.01, 0.35, 0.14, .maxF0
-    .pitchTier = Down to PitchTier
-    .pitchTableTemp = Down to TableOfReal: "Semitones"
-    .pitchTable = To Table: "deleteMe"
-    Rename: "pitch"
-    Remove column: "deleteMe"
+    @getPitchTable: .sound, .minF0, .maxF0, "declin"
 
     # calculate stats for Pitch
     @tableStats: "declin.pitch_", .pitchTable, "Time", "F0"
@@ -169,7 +179,9 @@ procedure declin: .grid, .tier, .sound, .minF0, .maxF0, .min_dB, .max_dB,
     @drawStuff: .sound, .pitchTable, .dBTable, .startT, .endT,
         ... .minF0, .maxF0, .startF0, .endF0,
         ... .min_dB, .max_dB, .dBStart, .dBEnd,
-        ... .title$, .draw_legend
+        ... .title$, .draw_legend,
+        ... .haanLines, .contour_options,
+        ... .hor, .vert
 
     # remove surplus objects
     selectObject: .pitchObj
@@ -183,11 +195,25 @@ procedure declin: .grid, .tier, .sound, .minF0, .maxF0, .min_dB, .max_dB,
     Remove
 endproc
 
-### output Procedure
+### DEPENDENCIES
+### input / output Procedure
+procedure getPitchTable: .sound, .minF0, .maxF0, calledFrom$
+    selectObject: .sound
+    'calledFrom$'.pitchObj = To Pitch (ac):
+        ... 0, .minF0, 15, "no", 0.03, 0.45, 0.01, 0.35, 0.14, .maxF0
+    'calledFrom$'.pitchTier = Down to PitchTier
+    'calledFrom$'.pitchTableTemp = Down to TableOfReal: "Semitones"
+    'calledFrom$'.pitchTable = To Table: "deleteMe"
+    Rename: "pitch"
+    Remove column: "deleteMe"
+endproc
+
 procedure drawStuff: .sound, .pitch, .dB, .startT, .endT,
     ... .minF0, .maxF0, .startF0, .endF0,
     ... .min_dB, .max_dB, .dBStart, .dBEnd,
-    ... .title$, .draw_legend
+    ... .title$, .draw_legend,
+    ... .haanLines, .contour_options,
+    ... .hor, .vert
 
     # set viewport and ink
     Erase all
@@ -202,101 +228,206 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT,
     Remove
 
     if .draw_legend
-        @draw_legend: hor, vert
+        @draw_legend: .hor, .vert, .haanLines, .contour_options
     endif
 
-    # draw white F0 lines
-    selectObject: .pitch
-    Axes: .startT, .endT, log2(.minF0/100)*12, log2(.maxF0/100)*12
+    # draw white outlines
     White
-    Line width: 6
-    @draw_table_line: .pitch, "Time", "F0", .startT, .endT, 1
-    Line width: 4
-    Draw line: .startT, .startF0, .endT, .endF0
+    if .contour_options < 3
+        # draw white F0 lines
+        selectObject: .pitch
+        Axes: .startT, .endT, log2(.minF0/100)*12, log2(.maxF0/100)*12
+        Line width: 6
+        @draw_table_line: .pitch, "Time", "F0", .startT, .endT, 1
+        Line width: 4
+        Draw line: .startT, .startF0, .endT, .endF0
+    endif
+    if .contour_options > 1
+        # draw white dB lines
+        Axes: .startT, .endT, .min_dB, .max_dB
+        Line width: 6
+        @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 1
+        Line width: 4
+        Draw line: .startT, .dBStart, .endT, .dBEnd
+    endif
 
-    # draw white dB lines
-    Axes: .startT, .endT, .min_dB, .max_dB
-    Line width: 6
-    @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 1
-    Line width: 4
-    Draw line: .startT, .dBStart, .endT, .dBEnd
+    # draw coloured contours
+    if .contour_options < 3
+        # draw coloured F0 lines
+        Axes: .startT, .endT, log2(.minF0/100)*12, log2(.maxF0/100)*12
+        Solid line
+        Line width: 4
+        Blue
+        @draw_table_line: .pitch, "Time", "F0", .startT, .endT, 0
+        Cyan
+        Dotted line
+        @draw_table_line: .pitch, "Time", "F0", .startT, .endT, 0
+        Solid line
+        Cyan
+        Line width: 2
+        Draw line: .startT, .startF0, .endT, .endF0
 
-    # draw coloured F0 lines
-    Axes: .startT, .endT, log2(.minF0/100)*12, log2(.maxF0/100)*12
-    Solid line
-    Line width: 4
-    Cyan
-    @draw_table_line: .pitch, "Time", "F0", .startT, .endT, 0
-    Black
-    Dotted line
-    @draw_table_line: .pitch, "Time", "F0", .startT, .endT, 0
-    Solid line
-    Cyan
-    Line width: 2
-    Draw line: .startT, .startF0, .endT, .endF0
+        if .haanLines
+            White
+            Solid line
+            Line width: 1
+            @linHaan: .pitch, "Time", "F0"
+            .uLineStF0 = .startT *  linHaan.slope_upper + linHaan.intercept_upper
+            .uLineEndF0 = .endT *  linHaan.slope_upper + linHaan.intercept_upper
+            Draw line: .startT, .uLineStF0, .endT, .uLineEndF0
+            .lLineStF0 = .startT *  linHaan.slope_lower + linHaan.intercept_lower
+            .lLineEndF0 = .endT *  linHaan.slope_lower + linHaan.intercept_lower
+            Draw line: .startT, .lLineStF0, .endT, .lLineEndF0
+            Blue
+            Dotted line
+            Line width: 1
+            @linHaan: .pitch, "Time", "F0"
+            .uLineStF0 = .startT *  linHaan.slope_upper + linHaan.intercept_upper
+            .uLineEndF0 = .endT *  linHaan.slope_upper + linHaan.intercept_upper
+            Draw line: .startT, .uLineStF0, .endT, .uLineEndF0
+            .lLineStF0 = .startT *  linHaan.slope_lower + linHaan.intercept_lower
+            .lLineEndF0 = .endT *  linHaan.slope_lower + linHaan.intercept_lower
+            Draw line: .startT, .lLineStF0, .endT, .lLineEndF0
+            Solid line
+        endif
+    endif
 
-    # draw coloured dB lines
-    Axes: .startT, .endT, .min_dB, .max_dB
-    Solid line
-    Line width: 4
-    Green
-    @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 0
-    Black
-    Dotted line
-    @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 0
-    Solid line
-    Green
-    Line width: 2
-    Draw line: .startT, .dBStart, .endT, .dBEnd
+    if .contour_options > 1
+        # draw coloured dB lines
+        Axes: .startT, .endT, .min_dB, .max_dB
+        Solid line
+        Line width: 4
+        Green
+        @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 0
+        Lime
+        Dotted line
+        @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 0
+        Solid line
+        Green
+        Line width: 2
+        Draw line: .startT, .dBStart, .endT, .dBEnd
+    endif
 
-    Line width: 1
-    Select outer viewport: 0, 6, 0, 4
+    if .contour_options < 3
+        # mark F0 frequency axis
+        Axes: .startT, .endT, log2(.minF0/100)*12, log2(.maxF0/100)*12
+        Line width: 2
+        Marks left every: 1, 5, "yes", "yes", "no"
+        Line width: 1
+        Marks left every: 1, 1, "no", "yes", "no"
+        Text left: "yes", "Frequency (ST re 100 Hz)"
+    endif
+
+    if .contour_options > 1
+        # mark dB Frequency axis
+        Axes: .startT, .endT, .min_dB, .max_dB
+        Line width: 2
+        Marks right every: 1, 5, "yes", "yes", "no"
+        Line width: 1
+        Marks right every: 1, 1, "no", "yes", "no"
+        Text right: "yes", "Intensity (dB)"
+    endif
+
+    # mark time axis
+    Axes: 0, .endT - .startT, 0, 1
     Draw inner box
-    # mark F0 Frequencies
-    Axes: .startT, .endT, log2(.minF0/100)*12, log2(.maxF0/100)*12
-    Line width: 2
-    Marks left every: 1, 5, "yes", "yes", "no"
-    Line width: 1
-    Marks left every: 1, 1, "no", "yes", "no"
-    Text left: "yes", "Frequency (ST re 100 Hz)"
-
-    # mark dB Frequencies
-    Axes: .startT, .endT, .min_dB, .max_dB
-    Line width: 2
-    Marks right every: 1, 5, "yes", "yes", "no"
-    Line width: 1
-    Marks right every: 1, 1, "no", "yes", "no"
-    Text right: "yes", "Intensity (dB)"
-
-    Axes: 0, .endT - .startT, .min_dB, .max_dB
-
     Line width: 2
     Marks bottom every: 1, 0.1, "yes", "yes", "no"
     Line width: 1
     Marks bottom every: 1, 0.02, "no", "yes", "no"
     Text bottom: "yes", "Time (secs)"
+
+    # add title
     Font size: 14
     Text top: "yes", "##" + .title$
-
 endproc
 
-procedure draw_legend: .hor, .vert
+procedure draw_legend: .hor, .vert, .haanLines, .contour_options
+    #calculate legend contents
+    .legendLines = 0
+    if .contour_options < 3
+        if .haanLines
+            .legendLines = .legendLines + 1
+            .legendText$[.legendLines] = "Upper/Lower F0 regression"
+            .whiteSize[.legendLines] = 1
+            .colour1$[.legendLines] = "Blue"
+            .colour2$[.legendLines] = "Blue"
+            .colour1Size[.legendLines] = 1
+            .colour2Size[.legendLines] = 1
+            .line1Type$[.legendLines] = "Dotted line"
+            .line2Type$[.legendLines] = "Dotted line"
+        endif
+
+        .legendLines = .legendLines + 1
+        .legendText$[.legendLines] = "F0 linear regression"
+        .whiteSize[.legendLines] = 4
+        .colour1$[.legendLines] = "Cyan"
+        .colour2$[.legendLines] = "Cyan"
+        .colour1Size[.legendLines] = 2
+        .colour2Size[.legendLines] = 2
+        .line1Type$[.legendLines] = "Solid line"
+        .line2Type$[.legendLines] = "Solid line"
+
+        .legendLines = .legendLines + 1
+        .legendText$[.legendLines] = "F0 contour"
+        .whiteSize[.legendLines] = 6
+        .colour1$[.legendLines] = "Blue"
+        .colour2$[.legendLines] = "Cyan"
+        .colour1Size[.legendLines] = 4
+        .colour2Size[.legendLines] = 2
+        .line1Type$[.legendLines] = "Solid line"
+        .line2Type$[.legendLines] = "Dotted line"
+    endif
+
+    if .contour_options > 1
+        .legendLines = .legendLines + 1
+        .legendText$[.legendLines] = "dB linear regression"
+        .whiteSize[.legendLines] = 4
+        .colour1$[.legendLines] = "Green"
+        .colour2$[.legendLines] = "Green"
+        .colour1Size[.legendLines] = 2
+        .colour2Size[.legendLines] = 2
+        .line1Type$[.legendLines] = "Solid line"
+        .line2Type$[.legendLines] = "Solid line"
+
+        .legendLines = .legendLines + 1
+        .legendText$[.legendLines] = "dB contour"
+        .whiteSize[.legendLines] = 6
+        .colour1$[.legendLines] = "Green"
+        .colour2$[.legendLines] = "Lime"
+        .colour1Size[.legendLines] = 4
+        .colour2Size[.legendLines] = 2
+        .line1Type$[.legendLines] = "Solid line"
+        .line2Type$[.legendLines] = "Dotted line"
+    endif
+
+    # calculate legend width
+    .legendWidth = 0
+    .legendWidth$ = ""
+    for .i to .legendLines
+        .len = length(.legendText$[.i])
+        if .len > .legendWidth
+            .legendWidth = .len
+            .legendWidth$ =  .legendText$[.i]
+        endif
+    endfor
+
     ### Draw Legend
     Axes: 0, 1, 0, 1
-    .text_width = Text width (world coordinates): "intensity contour (dB)"
+    .text_width = Text width (world coordinates): .legendWidth$
     .x_unit = Horizontal mm to world coordinates: 4
     .x_start = .x_unit
     .x_end = 4.5 * .x_unit + .text_width
     .y_unit  = Vertical mm to world coordinates: 4
     y_start = .y_unit
-    .y_end = .y_unit * 6
+    .y_end = .y_unit * (.legendLines + 2)
 
     if .hor
         .x_end = 1 - .x_unit
         .x_start = 1 - (4.5 * .x_unit + .text_width)
     endif
     if .vert
-        y_start = 1 - (.y_unit * 6)
+        y_start = 1 - (.y_unit * (.legendLines + 2))
         .y_end = 1 - .y_unit
     endif
 
@@ -307,71 +438,35 @@ procedure draw_legend: .hor, .vert
     Draw rectangle: .x_start, .x_end,
                  ... y_start,  .y_end
 
-    # Draw legend text
-    Text: .x_start + 2.5 * .x_unit , "Left", y_start + .y_unit,
-        ... "Half", "intensity contour (dB)"
-    Text: .x_start + 2.5 * .x_unit, "Left", y_start + .y_unit * 2, "Half",
-        ... "F0 contour (ST)"
-    Text: .x_start + 2.5 * .x_unit, "Left", y_start + .y_unit * 3,
-        ... "Half", "F0 Linear regression"
-    Text: .x_start + 2.5 * .x_unit, "Left", y_start + .y_unit * 4,
-        ... "Half", "dB Linear regression"
 
-    #F0 contour
-    Solid line
-    Line width: 6
-    Colour: "White"
-    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit,
-        ... .x_start + 2 * .x_unit, y_start + .y_unit
-    Line width: 4
-    Colour: "Cyan"
-    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit,
-        ... .x_start + 2 * .x_unit, y_start + .y_unit
-    Line width: 2
-    Dotted line
-    Colour: "Black"
-    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit,
-        ... .x_start + 2 * .x_unit, y_start + .y_unit
+    for .i to .legendLines
+        Font size: 10
+        Solid line
+        Black
+        Text: .x_start + 2.5 * .x_unit , "Left", y_start + .y_unit * .i,
+            ... "Half", .legendText$[.i]
 
-    # dB contour
-    Line width: 6
-    Solid line
-    Colour: "White"
-    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit * 2,
-        ... .x_start + 2 * .x_unit, y_start + .y_unit * 2
-    Line width: 4
-    Colour: "Green"
-    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit * 2,
-        ... .x_start + 2 * .x_unit, y_start + .y_unit * 2
-    Line width: 2
-    Dotted line
-    Colour: "Black"
-    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit * 2,
-        ... .x_start + 2 * .x_unit, y_start + .y_unit * 2
+        Line width: .whiteSize[.i]
+        Colour: "White"
+        Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit * .i,
+                ... .x_start + 2 * .x_unit, y_start + .y_unit * .i
 
-    #F0 Linear
-    Line width: 4
-    Solid line
-    Colour: "White"
-    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit * 3,
-        ... .x_start + 2 * .x_unit, y_start + .y_unit * 3
-    Line width: 2
-    Colour: "Cyan"
-    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit * 3,
-        ... .x_start + 2 * .x_unit, y_start + .y_unit * 3
+        Line width: .colour1Size[.i]
+        Colour: .colour1$[.i]
+        .curLineType$ = .line1Type$[.i]
+        '.curLineType$'
+        Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit * .i,
+                    ... .x_start + 2 * .x_unit, y_start + .y_unit * .i
 
-    # dB contour
-    Line width: 4
-    Solid line
-    Colour: "White"
-    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit * 4,
-        ... .x_start + 2 * .x_unit, y_start + .y_unit * 4
-    Line width: 2
-    Colour: "Green"
-    Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit * 4,
-        ... .x_start + 2 * .x_unit, y_start + .y_unit * 4
+        Line width: .colour2Size[.i]
+        Colour: .colour2$[.i]
+        .curLineType$ = .line2Type$[.i]
+        '.curLineType$'
+        Draw line: .x_start + 0.5 * .x_unit, y_start + .y_unit * .i,
+                    ... .x_start + 2 * .x_unit, y_start + .y_unit * .i
+
+    endfor
 endproc
-
 
 procedure output
     # output Pitch info
@@ -399,9 +494,6 @@ procedure output
     appendInfoLine: "Linear dB at start:              ", declin.dBStart
     appendInfoLine: "Linear dB at end:                ", declin.dBEnd
 endproc
-
-### DEPENDENCIES
-
 ### mathematical procedures
 procedure linearY: .ans$, .slope, .intercept, .x
     '.ans$' = .slope * .x + .intercept
@@ -413,40 +505,40 @@ procedure tableStats: .var$, .table, .colX$, .colY$
     .factor$ = Get column label: 1
     if .colX$ != .factor$
         appendInfoLine: .colX$, " != ", .factor$
-    @table2array: .shortTable, .colY$, "tableStats.colTemp$"
-    Remove column: .colY$
-    Append column: .colY$
-    for .i to table2array.n
-        Set string value: .i, .colY$, .colTemp$[.i]
-    endfor
+        @table2array: .shortTable, .colY$, "tableStats.colTemp$"
+        Remove column: .colY$
+        Append column: .colY$
+        for .i to table2array.n
+            Set string value: .i, .colY$, .colTemp$[.i]
+        endfor
     endif
 
     if .numRows > 1
-    '.var$'stDevY = Get standard deviation: .colY$
-    '.var$'stDevX = Get standard deviation: .colX$
+        '.var$'stDevY = Get standard deviation: .colY$
+        '.var$'stDevX = Get standard deviation: .colX$
         '.var$'min = Get minimum: .colY$
-    '.var$'max = Get maximum: .colY$
-    .linear_regression = To linear regression
-    .linear_regression$ = Info
-    '.var$'slope = extractNumber (.linear_regression$,
+        '.var$'max = Get maximum: .colY$
+        .linear_regression = To linear regression
+        .linear_regression$ = Info
+        '.var$'slope = extractNumber (.linear_regression$,
             ... "Coefficient of factor '.colX$': ")
-    '.var$'intercept = extractNumber (.linear_regression$, "Intercept: ")
-    '.var$'r = round('.var$'slope * '.var$'stDevX / '.var$'stDevY * 1000)
+        '.var$'intercept = extractNumber (.linear_regression$, "Intercept: ")
+        '.var$'r = round('.var$'slope * '.var$'stDevX / '.var$'stDevY * 1000)
             ... / 1000
-    selectObject: .linear_regression
-    .info$ = Info
-    Remove
+        selectObject: .linear_regression
+        .info$ = Info
+        Remove
     else
-    '.var$'stDevY = undefined
-    '.var$'stDevX = undefined
+        '.var$'stDevY = undefined
+        '.var$'stDevX = undefined
         '.var$'min = undefined
-    '.var$'max = undefined
-    '.var$'linear_regression = undefined
-    '.var$'linear_regression$ = "N/A"
-    '.var$'slope = undefined
-    '.var$'intercept = Get value: 1, .colY$
-    '.var$'r = undefined
-    .info$ = "N/A"
+        '.var$'max = undefined
+        '.var$'linear_regression = undefined
+        '.var$'linear_regression$ = "N/A"
+        '.var$'slope = undefined
+        '.var$'intercept = Get value: 1, .colY$
+        '.var$'r = undefined
+        .info$ = "N/A"
     endif
 
     selectObject: .shortTable
@@ -539,7 +631,6 @@ procedure list2array: .list$, .array$
     .origIndex[.n] = .prev_start
 endproc
 
-
 procedure draw_table_line: .tableObj, .xCol$, .yCol$, .x_axis_min, .x_axis_max,
         ... .ignore_zeros
     selectObject: .tableObj
@@ -550,8 +641,8 @@ procedure draw_table_line: .tableObj, .xCol$, .yCol$, .x_axis_min, .x_axis_max,
         .y = Get value: .i, .yCol$
         .x_next  = Get value: .i+1, .xCol$
         .y_next = Get value: .i+1, .yCol$
-    allDefined = .x != undefined and .x_next != undefined
-         ... and .y != undefined and .y_next != undefined
+        allDefined = .x != undefined and .x_next != undefined
+             ... and .y != undefined and .y_next != undefined
         if not .ignore_zeros or (.y != 0 and .y_next != 0)
             if .x >= .x_axis_min and .x_next <= .x_axis_max
                     ... and allDefined
@@ -565,9 +656,7 @@ endproc
 procedure delta: .table
     selectObject: .table
     Append column: "deltaX"
-
     .num_rows = Get number of rows
-
     for .i to .num_rows - 1
         .val1 = Get value: .i, "Time"
         .val2 = Get value: .i+1, "Time"
@@ -593,5 +682,61 @@ procedure find_nearest_table: .input_var, .input_table, .input_col$
             .val = .val_cur
             .index = .i
         endif
+    endfor
+endproc
+
+procedure linHaan: .table, .xCol$, .yCol$
+    # Return linear regression lines of a contour from table form.
+    # This procedure will return the upper and lower regression line for contour
+    # (converted to table form) based on the overall linear regression line.
+    # This is based on Haan's (2002) approach to getting an approximation
+    # of upper and lower slopes / regresion lines of an F0 contour.
+    #
+    # input: table, xCol$ [e.g. "Time"], yCol$ [e.g. "F0"]
+    # output: linHaan.slope, linHaan.intercept
+    #         linHaan_lower.slope, linHaan_lower.intercept
+    #         linHaan_upper.slope, linHaan_upper.intercept
+
+    @tableStats: "linHaan.", .table, .xCol$, .yCol$
+    .slopeGen = .slope
+    .interceptGen = .intercept
+
+    # Get suffix for output variable
+    .sign$[1] = "<"
+    .sign$[2] = ">"
+
+    for .i to 2
+        # Create temporary table
+        selectObject: .table
+        .tempTable = Copy: "TempTable"
+        # Get table metadata
+        .numRows = Get number of rows
+
+        .direction$ = .sign$[.i]
+        .ending$ = "_lower"
+        if .direction$ = "<"
+            .ending$ = "_upper"
+        endif
+
+        # Remove rows above / below the linear regression value
+        for .row from 0 to .numRows - 1
+            selectObject: .tempTable
+            .x = .numRows - .row
+            .yAct = Get value: .x, .yCol$
+            .xAct = Get value: .x, .xCol$
+            .yLinear = .slope * .xAct + .intercept
+            if .yAct '.direction$' .yLinear
+                Remove row: .x
+            endif
+        endfor
+
+        # Get linear regression for values above / below main regression line
+        @tableStats: "linHaan.", .tempTable, .xCol$, .yCol$
+        .slope'.ending$' = .slope
+        .intercept'.ending$' = .intercept
+
+        # Remove surplus objects
+        selectObject: .tempTable
+        Remove
     endfor
 endproc
