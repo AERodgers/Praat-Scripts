@@ -1,4 +1,4 @@
-# Utterance Global F0 and Intensity Declination Calculation (basic) 1.3.1
+# Utterance Global F0 and Intensity Declination Calculation (basic) 1.3.2
 # =======================================================================
 # Written for Praat 6.x.x
 #
@@ -53,6 +53,7 @@
     #         Haan (2002)
     #       - created more intelligent legend legend_options
     #       - added option to include only F0 or dB contours in menu
+    # 1.3.2 - improved text output
     #
     # REFERENCE
     # Haan, J. (2002) Speaking of Questions - An Exploration of Dutch
@@ -95,6 +96,7 @@ endform
 
 
 haanLines = draw_upper_and_lower_F0_regression
+
 # fix legend options
 Font size: 10
 draw_legend = 1
@@ -149,32 +151,36 @@ procedure declin: .grid, .tier, .sound, .minF0, .maxF0, .min_dB, .max_dB,
     @tableStats: "declin.pitch_", .pitchTable, "Time", "F0"
     @linearY: "declin.startF0", .pitch_slope, .pitch_intercept, .startT
     @linearY: "declin.endF0", .pitch_slope, .pitch_intercept, .endT
+    if .haanLines
+        @linHaan: .pitchTable, "Time", "F0"
+    endif
     # round values
     .startF0 = round(.startF0*10)/10
     .endF0 = round(.endF0*10)/10
 
-    # Get intensity table
-    selectObject: .sound
-    .dB = To Intensity: .minF0, 0, "yes"
-    .dBTier= Down to IntensityTier
-    .dBTableTemp = Down to TableOfReal
-    .dBTable = To Table: "deleteMe"
-    Rename: "intensity"
-    Remove column: "deleteMe"
-    @removeRowsWhere: .dBTable, "Time (s)",
-        ... " < '.startT'"
-    @removeRowsWhere: .dBTable, "Time (s)",
-        ... " > '.endT'"
-    Set column label (label): "Intensity (dB)", "Intensity"
-    Set column label (label): "Time (s)", "Time"
 
-    # calculate stats for Intensity
-    @tableStats: "declin.dB_", .dBTable, "Time", "Intensity"
-    @linearY: "declin.dBStart", .dB_slope, .dB_intercept, .startT
-    @linearY: "declin.dBEnd", .dB_slope, .dB_intercept, .endT
-    # round values
-    .dBStart = round(.dBStart*10)/10
-    .dBEnd = round(.dBEnd*10)/10
+    # Get intensity table
+        selectObject: .sound
+        .dB = To Intensity: .minF0, 0, "yes"
+        .dBTier= Down to IntensityTier
+        .dBTableTemp = Down to TableOfReal
+        .dBTable = To Table: "deleteMe"
+        Rename: "intensity"
+        Remove column: "deleteMe"
+        @removeRowsWhere: .dBTable, "Time (s)",
+            ... " < '.startT'"
+        @removeRowsWhere: .dBTable, "Time (s)",
+            ... " > '.endT'"
+        Set column label (label): "Intensity (dB)", "Intensity"
+        Set column label (label): "Time (s)", "Time"
+
+        # calculate stats for Intensity
+        @tableStats: "declin.dB_", .dBTable, "Time", "Intensity"
+        @linearY: "declin.dBStart", .dB_slope, .dB_intercept, .startT
+        @linearY: "declin.dBEnd", .dB_slope, .dB_intercept, .endT
+        # round values
+        .dBStart = round(.dBStart*10)/10
+        .dBEnd = round(.dBEnd*10)/10
 
     @drawStuff: .sound, .pitchTable, .dBTable, .startT, .endT,
         ... .minF0, .maxF0, .startF0, .endF0,
@@ -252,6 +258,23 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT,
     endif
 
     # draw coloured contours
+    if .contour_options > 1
+        # draw coloured dB lines
+        Axes: .startT, .endT, .min_dB, .max_dB
+        Solid line
+        Line width: 4
+        Green
+        @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 0
+        Lime
+        Line width: 1
+        Solid line
+        @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 0
+        Solid line
+        Green
+        Line width: 2
+        Draw line: .startT, .dBStart, .endT, .dBEnd
+    endif
+
     if .contour_options < 3
         # draw coloured F0 lines
         Axes: .startT, .endT, log2(.minF0/100)*12, log2(.maxF0/100)*12
@@ -259,9 +282,9 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT,
         Line width: 4
         Blue
         @draw_table_line: .pitch, "Time", "F0", .startT, .endT, 0
-        Cyan
-        Dotted line
-        @draw_table_line: .pitch, "Time", "F0", .startT, .endT, 0
+        #Cyan
+        #Dotted line
+        #@draw_table_line: .pitch, "Time", "F0", .startT, .endT, 0
         Solid line
         Cyan
         Line width: 2
@@ -271,7 +294,6 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT,
             White
             Solid line
             Line width: 1
-            @linHaan: .pitch, "Time", "F0"
             .uLineStF0 = .startT *  linHaan.slope_upper + linHaan.intercept_upper
             .uLineEndF0 = .endT *  linHaan.slope_upper + linHaan.intercept_upper
             Draw line: .startT, .uLineStF0, .endT, .uLineEndF0
@@ -290,22 +312,6 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT,
             Draw line: .startT, .lLineStF0, .endT, .lLineEndF0
             Solid line
         endif
-    endif
-
-    if .contour_options > 1
-        # draw coloured dB lines
-        Axes: .startT, .endT, .min_dB, .max_dB
-        Solid line
-        Line width: 4
-        Green
-        @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 0
-        Lime
-        Dotted line
-        @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 0
-        Solid line
-        Green
-        Line width: 2
-        Draw line: .startT, .dBStart, .endT, .dBEnd
     endif
 
     if .contour_options < 3
@@ -372,11 +378,11 @@ procedure draw_legend: .hor, .vert, .haanLines, .contour_options
         .legendText$[.legendLines] = "F0 contour"
         .whiteSize[.legendLines] = 6
         .colour1$[.legendLines] = "Blue"
-        .colour2$[.legendLines] = "Cyan"
+        .colour2$[.legendLines] = "Blue"
         .colour1Size[.legendLines] = 4
         .colour2Size[.legendLines] = 2
         .line1Type$[.legendLines] = "Solid line"
-        .line2Type$[.legendLines] = "Dotted line"
+        .line2Type$[.legendLines] = "Solid line"
     endif
 
     if .contour_options > 1
@@ -396,9 +402,9 @@ procedure draw_legend: .hor, .vert, .haanLines, .contour_options
         .colour1$[.legendLines] = "Green"
         .colour2$[.legendLines] = "Lime"
         .colour1Size[.legendLines] = 4
-        .colour2Size[.legendLines] = 2
+        .colour2Size[.legendLines] = 1
         .line1Type$[.legendLines] = "Solid line"
-        .line2Type$[.legendLines] = "Dotted line"
+        .line2Type$[.legendLines] = "Solid line"
     endif
 
     # calculate legend width
@@ -474,25 +480,58 @@ procedure output
     declin.pitch_max = round(declin.pitch_max * 10) / 10
     declin.dB_min = round(declin.dB_min * 10) / 10
     declin.dB_max = round(declin.dB_max * 10) / 10
+    writeInfoLine: "STATS FOR SOUND WAVEFORM"
+    appendInfoLine: "========================", newline$
+    if contour_options < 3
+        appendInfoLine: "Pitch Info", newline$,
+            ... "-----------------------------------------------"
+        appendInfoLine: "Mean F0 (ST re 100 Hz).................... ",
+            ... declin.pitch_yMean
+        appendInfoLine: "Minimum F0 (ST re 100 Hz)................. ",
+            ... declin.pitch_min
+        appendInfoLine: "Maximum F0 (ST re 100 Hz)................. ",
+            ... declin.pitch_max
+        appendInfo: newline$
+        appendInfoLine: "Linear F0 slope (ST/sec).................. ",
+            ... declin.pitch_slope
+        appendInfoLine: "Linear F0 intercept (ST re 100 Hz)........ ",
+            ... declin.pitch_intercept
+        appendInfoLine: "Linear F0 at start (projection, ST)....... ",
+            ... declin.startF0
+        appendInfoLine: "Linear F0 at end (projection, ST)......... ",
+            ... declin.endF0
 
+        if haanLines
+            appendInfoLine: newline$,
+                ... "Upper and Lower F0 Regression Lines",
+                ... newline$, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            appendInfoLine: "Upper Linear F0 slope (ST/sec)............ ",
+                ... linHaan.slope_upper
+            appendInfoLine: "Upper Linear F0 intercept (ST re 100 Hz).. ",
+                ... linHaan.intercept_upper
+            appendInfoLine: "Lower Linear F0 slope (ST/sec)............ ",
+                ... linHaan.slope_lower
+            appendInfoLine: "Lower Linear F0 intercept (ST re 100 Hz).. ",
+                ... linHaan.intercept_lower
+        endif
+    endif
 
-    writeInfoLine: "Pitch Info", newline$, "=========="
-    appendInfoLine: "Mean F0 (ST re 100 Hz)             ", declin.pitch_yMean
-    appendInfoLine: "Minimum F0 (ST re 100 Hz)          ", declin.pitch_min
-    appendInfoLine: "Maximum F0 (ST re 100 Hz)          ", declin.pitch_max
-    appendInfoLine: "Linear F0 slope (ST/sec):          ", declin.pitch_slope
-    appendInfoLine: "Linear F0 at start (ST re 100 Hz): ", declin.startF0
-    appendInfoLine: "Linear F0 at end (ST re 100 Hz):   ", declin.endF0
+    if contour_options > 1
+        # output Intensity info
+        appendInfoLine: newline$
+        appendInfoLine: "Intensity Info", newline$,
+            ... "---------------------------------------"
+        appendInfoLine: "Mean dB........................... ", declin.dB_yMean
+        appendInfoLine: "Minimum dB........................ ", declin.dB_min
+        appendInfoLine: "Maximum dB........................ ", declin.dB_max
+        appendInfo: newline$
+        appendInfoLine: "Linear intensity slope: (dB/sec).. ", declin.dB_slope
+        appendInfoLine: "Linear intensity intercept (dB)... ",
+            ... declin.dB_intercept
+        appendInfoLine: "Linear dB at start (projection)... ", declin.dBStart
+        appendInfoLine: "Linear dB at end (projection)..... ", declin.dBEnd
+    endif
 
-    # output Intensity info
-    appendInfoLine: ""
-    appendInfoLine: "Intensity Info", newline$, "=============="
-    appendInfoLine: "Mean dB:                         ", declin.dB_yMean
-    appendInfoLine: "Minimum dB:                      ", declin.dB_min
-    appendInfoLine: "Maximum dB:                      ", declin.dB_max
-    appendInfoLine: "Linear intensity slope: (dB/sec) ", declin.dB_slope
-    appendInfoLine: "Linear dB at start:              ", declin.dBStart
-    appendInfoLine: "Linear dB at end:                ", declin.dBEnd
 endproc
 ### mathematical procedures
 procedure linearY: .ans$, .slope, .intercept, .x
@@ -559,6 +598,62 @@ procedure tableStats: .var$, .table, .colX$, .colY$
     '.var$'yMean = round('.var$'yMean*10)/10
     '.var$'yMed = round('.var$'yMed*10)/10
     Remove
+endproc
+
+procedure linHaan: .table, .xCol$, .yCol$
+    # Return linear regression lines of a contour from table form.
+    # This procedure will return the upper and lower regression line for contour
+    # (converted to table form) based on the overall linear regression line.
+    # This is based on Haan's (2002) approach to getting an approximation
+    # of upper and lower slopes / regresion lines of an F0 contour.
+    #
+    # input: table, xCol$ [e.g. "Time"], yCol$ [e.g. "F0"]
+    # output: linHaan.slope, linHaan.intercept
+    #         linHaan_lower.slope, linHaan_lower.intercept
+    #         linHaan_upper.slope, linHaan_upper.intercept
+
+    @tableStats: "linHaan.", .table, .xCol$, .yCol$
+    .slopeGen = .slope
+    .interceptGen = .intercept
+
+    # Get suffix for output variable
+    .sign$[1] = "<"
+    .sign$[2] = ">"
+
+    for .i to 2
+        # Create temporary table
+        selectObject: .table
+        .tempTable = Copy: "TempTable"
+        # Get table metadata
+        .numRows = Get number of rows
+
+        .direction$ = .sign$[.i]
+        .ending$ = "_lower"
+        if .direction$ = "<"
+            .ending$ = "_upper"
+        endif
+
+        # Remove rows above / below the linear regression value
+        for .row from 0 to .numRows - 1
+            selectObject: .tempTable
+            .x = .numRows - .row
+            .yAct = Get value: .x, .yCol$
+            .xAct = Get value: .x, .xCol$
+            .yLinear = .slope * .xAct + .intercept
+            if .yAct '.direction$' .yLinear
+                Remove row: .x
+            endif
+        endfor
+
+        # Get linear regression for values above / below main regression line
+        @tableStats: "linHaan.", .tempTable, .xCol$, .yCol$
+        .slope'.ending$' = .slope
+        .intercept'.ending$' = .intercept
+
+        # Remove surplus objects
+        selectObject: .tempTable
+        Remove
+    endfor
 endproc
 
 ### Table management procedures
@@ -682,61 +777,5 @@ procedure find_nearest_table: .input_var, .input_table, .input_col$
             .val = .val_cur
             .index = .i
         endif
-    endfor
-endproc
-
-procedure linHaan: .table, .xCol$, .yCol$
-    # Return linear regression lines of a contour from table form.
-    # This procedure will return the upper and lower regression line for contour
-    # (converted to table form) based on the overall linear regression line.
-    # This is based on Haan's (2002) approach to getting an approximation
-    # of upper and lower slopes / regresion lines of an F0 contour.
-    #
-    # input: table, xCol$ [e.g. "Time"], yCol$ [e.g. "F0"]
-    # output: linHaan.slope, linHaan.intercept
-    #         linHaan_lower.slope, linHaan_lower.intercept
-    #         linHaan_upper.slope, linHaan_upper.intercept
-
-    @tableStats: "linHaan.", .table, .xCol$, .yCol$
-    .slopeGen = .slope
-    .interceptGen = .intercept
-
-    # Get suffix for output variable
-    .sign$[1] = "<"
-    .sign$[2] = ">"
-
-    for .i to 2
-        # Create temporary table
-        selectObject: .table
-        .tempTable = Copy: "TempTable"
-        # Get table metadata
-        .numRows = Get number of rows
-
-        .direction$ = .sign$[.i]
-        .ending$ = "_lower"
-        if .direction$ = "<"
-            .ending$ = "_upper"
-        endif
-
-        # Remove rows above / below the linear regression value
-        for .row from 0 to .numRows - 1
-            selectObject: .tempTable
-            .x = .numRows - .row
-            .yAct = Get value: .x, .yCol$
-            .xAct = Get value: .x, .xCol$
-            .yLinear = .slope * .xAct + .intercept
-            if .yAct '.direction$' .yLinear
-                Remove row: .x
-            endif
-        endfor
-
-        # Get linear regression for values above / below main regression line
-        @tableStats: "linHaan.", .tempTable, .xCol$, .yCol$
-        .slope'.ending$' = .slope
-        .intercept'.ending$' = .intercept
-
-        # Remove surplus objects
-        selectObject: .tempTable
-        Remove
     endfor
 endproc
