@@ -21,15 +21,13 @@
     # functions (e.g. @pitch and @h1h2) can be replaced with alternative estimation algorithms.
     #
     # The script is inspired by the excellent periogram demonstrated at ICPHS by Albert, Cangemi,
-    # and Grice (2018).
+    # and Grice (2019).
     #
     # Script and procedures are published under the GNU GENERAL PUBLIC LICENSE.
     #
     # REFERENCE
-    # Albert, A., Cangemi, F., & Grice, M. (2018). Using periodic energy to enrich acoustic
-    #     representations of pitch in speech: A demonstration. In Proceedings of the 9th
-    #     International Conference on Speech Prosody (pp. 804–808).
-    #     doi.org/10.21437/SpeechProsody.2018-162
+    #     Albert, A., Cangemi, F., & Grice, M. (2019). Can you draw me a question? International 
+    #         Congress of Phonetic Sciences. doi.org/10.13140/RG.2.2.15700.14729
 
 form c3pogram
     choice Parameter_two 1
@@ -479,15 +477,13 @@ procedure pitch2Table: .pitchObject, .interpolate
     .table = .pitchTable
 endproc
 
-procedure nearestVal: .input_var, .input_table, .input_col$
-    # NB: .input_array$ is the name of the input array as a string without
-    #     the index in brackets
+procedure nearestVal: .input_val, .input_table, .input_col$
     .diff = 1e+100
     selectObject: .input_table
     .num_rows = Get number of rows
     for .i to .num_rows
         .val_cur = Get value: .i, .input_col$
-        .diff_cur = abs(.input_var - .val_cur)
+        .diff_cur = abs(.input_val - .val_cur)
         if .diff_cur < .diff
             .diff = .diff_cur
             .val = .val_cur
