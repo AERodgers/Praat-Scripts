@@ -162,7 +162,12 @@ procedure c3pogram: .param2, .hz_ST, .paintSpect, .title$, .grid, .sound, .tier,
     Text left: "yes", .leftText$
 
     # add title
-    Select outer viewport: 0, 6, 0, 4
+    if .grid * .tier > 0
+        Select outer viewport: 0, 6, 0, 4
+    else
+        Select outer viewport: 0, 6, 0, 3.35
+    endif
+
     Font size: 14
     Text top: "yes", "##" + .title$
     Font size: 10
