@@ -17,6 +17,6 @@ The scripts can be divided into four types:
        These are scripts that actually do some analysis.       
        
     4. Procedures
-       These are blocks of procedures to be included other scipts, and include graphical , objects management, and mathematical
+       These are blocks of procedures to be included in other scripts, and include graphical, objects management, and mathematical
        procedures. There may be more efficient ways of doing some of these things, but I probably didn't know how to when I
        was learning to script in Praat (which I still am, so be kind).
