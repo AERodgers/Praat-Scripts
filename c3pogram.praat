@@ -26,26 +26,29 @@
     # Script and procedures are published under the GNU GENERAL PUBLIC LICENSE.
     #
     # REFERENCE
-    #     Albert, A., Cangemi, F., & Grice, M. (2019). Can you draw me a question? International 
+    #     Albert, A., Cangemi, F., & Grice, M. (2019). Can you draw me a question? International
     #         Congress of Phonetic Sciences. doi.org/10.13140/RG.2.2.15700.14729
 
 form c3pogram
-    choice Parameter_two 1
-        button Cepstral Peak Prominence
-        button Redidual of intensity (linear regression)
-        button H1-H2 of differentiated glottal pulse (LPC-IF)
-        button Harmonicity (Praat function)
-    comment Harmonicity does not appear to be a particularly useful secondary parameter.
-    choice pitch_scale 2
-        button Hertz
-        button Semitones re 1 Hz
-    boolean Paint_spectrogram 1
     sentence title
     natural sound 2
     natural grid 1
     natural tier 1
     natural minF0 60
     natural maxF0 400
+    choice pitch_scale 2
+        button Hertz
+        button Semitones re 1 Hz
+    boolean Paint_spectrogram 1
+    choice Parameter_two 1
+        button Cepstral Peak Prominence
+        button Residual of intensity (linear regression)
+        button H1-H2 of differentiated glottal pulse (LPC-IF)
+        button Harmonicity (Praat function)
+    comment CPP appears to reflect more intuitive expectations of contour.
+    comment Residual of linear regression of intensity used to compensate for global declination.
+    comment H1-H2 estimation is very basic. It also emphasises very tense / creaky stretches
+    comment Harmonicity seems to reflects spectral balance (higher values for approximants, nasals)
 endform
 
 @c3pogram: parameter_two, pitch_scale, paint_spectrogram, title$, grid, sound, tier, minF0, maxF0
