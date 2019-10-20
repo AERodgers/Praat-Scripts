@@ -1,4 +1,4 @@
-# C3POGRAM   V.1.0.3
+# C3POGRAM   V.1.1.0
 # ==================
 # Written for Praat 6.0.40
 
@@ -12,10 +12,11 @@
 # October 19, 2019
 
 ### C3POGRAM
-    # This script draws a pitch contour with a spectrogram and single textgrid referecne tier. A
-    # secondary parameter determines the size and and intensity of the pitch contour points. Cut-off
-    # points are built into the functions, below or above which the F0 contour is shown with a red
-    #  dot. (NB: For H1-H2, lower values are indicated by larger circles and more intense colour.)
+    # This script draws a pitch contour with a spectrogram and single textgrid reference tier (if
+    # grid and tier are specified). A secondary parameter determines the size and and intensity of
+    # the pitch contour points. Cut-off  points are built into the functions, below or above which
+    # the F0 contour is shown with a red dot. (NB: For H1-H2, lower values are indicated by larger
+    # circles and more intense colour.)
     #
     # It is written as a set of procedures so can be implemented in other scripts, while other
     # functions (e.g. @pitch and @h1h2) can be replaced with alternative estimation algorithms.
@@ -26,14 +27,17 @@
     # Script and procedures are published under the GNU GENERAL PUBLIC LICENSE.
     #
     # REFERENCE
-    #     Albert, A., Cangemi, F., & Grice, M. (2019). Can you draw me a question? International
-    #         Congress of Phonetic Sciences. doi.org/10.13140/RG.2.2.15700.14729
+    # Albert, A., Cangemi, F., & Grice, M. (2019). Can you draw me a question? International
+    #     Congress of Phonetic Sciences. doi.org/10.13140/RG.2.2.15700.14729
+    #
+    # UPDATES
+    # 1.1.0    - 20.10.19 - Textgrid no longer required (leave grid or tier field as 0)
 
 form c3pogram
     sentence title
     natural sound 2
-    natural grid 1
-    natural tier 1
+    integer grid 0 (=  no textgrid)
+    integer tier 0 (=  no textgrid)
     natural minF0 60
     natural maxF0 400
     choice pitch_scale 2
@@ -55,15 +59,24 @@ endform
 
 # C3POGRAM FUNCTIONS
 procedure c3pogram: .param2, .hz_ST, .paintSpect, .title$, .grid, .sound, .tier, .minF0, .maxF0
-    selectObject: .grid
-    .refTier = Extract one tier: .tier
-    .gridTable = Down to Table: "no", 3, "no", "no"
-    .num_rows = Get number of rows
-    .minT = Get value: 1, "tmin"
-    .maxT = Get value: .num_rows, "tmax"
-    Remove
+
+    # adjust sound intensity
     selectObject: .sound
     Scale intensity: 70
+
+    if .grid * .tier > 0
+        selectObject: .grid
+        .refTier = Extract one tier: .tier
+        .gridTable = Down to Table: "no", 3, "no", "no"
+        .num_rows = Get number of rows
+        .minT = Get value: 1, "tmin"
+        .maxT = Get value: .num_rows, "tmax"
+        Remove
+    else
+        selectObject: .sound
+        .minT = Get start time
+        .maxT = Get end time
+    endif
 
     # reset draw space
     Erase all
@@ -87,12 +100,14 @@ procedure c3pogram: .param2, .hz_ST, .paintSpect, .title$, .grid, .sound, .tier,
     Line width: 1
     Draw inner box
 
-    # draw text grid text and lines
-    Select outer viewport: 0, 6, 0, 4
-    selectObject: .refTier
-    Draw: .minT, .maxT, "yes", "yes", "no"
-    Line width: 1
-    Draw inner box
+    if .grid * .tier > 0
+        # draw text grid text and lines
+        Select outer viewport: 0, 6, 0, 4
+        selectObject: .refTier
+        Draw: .minT, .maxT, "yes", "yes", "no"
+        Line width: 1
+        Draw inner box
+    endif
 
     # Adjust time to start from 0
     Axes: 0, .maxT-.minT, 1, 0
@@ -155,7 +170,9 @@ procedure c3pogram: .param2, .hz_ST, .paintSpect, .title$, .grid, .sound, .tier,
     selectObject: .vqTable
     plusObject: pitch2Table.table
     plusObject: pitch.obj
-    plusObject: .refTier
+    if .grid * .tier > 0
+        plusObject: .refTier
+    endif
     Remove
 endproc
 
