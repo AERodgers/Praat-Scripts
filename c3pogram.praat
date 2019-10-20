@@ -12,7 +12,7 @@
 # October 19, 2019
 
 ### C3POGRAM
-    # This script draws a pitch contour with a spectrogram and single textgrid referecne tier. A
+    # This script draws a pitch contour with a spectrogram and single textgrid reference tier. A
     # secondary parameter determines the size and and intensity of the pitch contour points. Cut-off
     # points are built into the functions, below or above which the F0 contour is shown with a red
     #  dot. (NB: For H1-H2, lower values are indicated by larger circles and more intense colour.)
