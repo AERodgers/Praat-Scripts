@@ -1,12 +1,12 @@
-# C3POGRAM   V.1.1.0
+# C3POGRAM   V.1.1.1
 # ==================
 # Written for Praat 6.0.40
 
 # script by Antoin Eoin Rodgers
 #
-# |email  | rodgeran@tcd.ie
-# |twitter| @phonetic_antoin
-# |github | github.com/AERodgers
+# | email   | rodgeran@tcd.ie
+# | twitter | @phonetic_antoin
+# | github  | github.com/AERodgers
 #
 # Phonetics and speech Laboratory, Trinity College Dublin
 # October 19, 2019
@@ -32,6 +32,9 @@
     #
     # UPDATES
     # 1.1.0    - 20.10.19 - Textgrid no longer required (leave grid or tier field as 0)
+    # 1.1.1    - 21.10.19 - Added table2array procedure and indicated procedure dependencies at
+    #                       start of each procedure to make it easier to incpororate them into other
+    #                       scripts.
 
 form c3pogram
     sentence title
@@ -237,6 +240,8 @@ procedure pitch: .sound, .minF0, .maxF0
 endproc
 
 procedure h1h2: .sound, .pitchTable
+    # Procedure dependencies @getHn
+
     # PROCESS SOUND WAVEFORM
     # Get sampling data from sound object
     selectObject: .sound
@@ -314,6 +319,8 @@ procedure getHn: .ifSpectro, .hn, .time, .f0
 endproc
 
 procedure harmonicity: .sound, .minF0
+    # Procedure dependencies: @array2table (@list2array), @delRowsIf
+
     # create harmonicity object
     selectObject: .sound
     .harmonicity = To Harmonicity (ac): 0.01, .minF0, 0.1, 4.5
@@ -338,6 +345,8 @@ procedure harmonicity: .sound, .minF0
 endproc
 
 procedure intensity: .sound, .minF0, .minT, .maxT
+    # Procedure dependencies: @delRowsIf, @tableStats (@keepCols, @table2array)
+
     # create harmonicity object
     selectObject: .sound
     .tempI1 = To Intensity: 75, 0, "yes"
@@ -377,6 +386,7 @@ procedure intensity: .sound, .minF0, .minT, .maxT
 endproc
 
 procedure cpp: .sound, .minF0, .maxF0, .pitchTable
+    # Procedure dependencies:  @delRowsIf
     selectObject: .sound
     .powerCepstrogram = To PowerCepstrogram: 75, 0.002, 5000, .minF0
 
@@ -412,6 +422,8 @@ endproc
 
 # OBJECT MANAGEMENT FUNCTIONS
 procedure array2table: .table$, .arrays$, .rows
+    # Procedure dependencies: @list2array
+
     # convert array list to indexed string list
     @list2array: .arrays$, "list2array.arrayList$"
 
@@ -441,7 +453,26 @@ procedure array2table: .table$, .arrays$, .rows
     endfor
 endproc
 
+procedure table2array: .table, .col$, .array$
+    # Procedure dependencies: none
+
+    .string = right$(.array$, 1) = "$"
+    selectObject: .table
+    .n = Get number of rows
+    for .i to .n
+        if .string
+            .cur_val$ = Get value: .i, .col$
+            '.array$'[.i] = .cur_val$
+        else
+            .cur_val = Get value: .i, .col$
+            '.array$'[.i] = .cur_val
+        endif
+    endfor
+endproc
+
 procedure list2array: .list$, .array$
+    # Procedure dependencies: none
+
     .list_len = length(.list$)
     .n = 1
     .prev_start = 1
@@ -463,6 +494,7 @@ procedure list2array: .list$, .array$
 endproc
 
 procedure pitch2Table: .pitchObject, .interpolate
+    # Procedure dependencies: none
     selectObject: .pitchObject
     .originalObject = .pitchObject
     if .interpolate
@@ -503,6 +535,8 @@ procedure pitch2Table: .pitchObject, .interpolate
 endproc
 
 procedure nearestVal: .input_val, .input_table, .input_col$
+    # Procedure dependencies: none
+
     .diff = 1e+100
     selectObject: .input_table
     .num_rows = Get number of rows
@@ -518,6 +552,8 @@ procedure nearestVal: .input_val, .input_table, .input_col$
 endproc
 
 procedure delRowsIf: .table, .cond$
+    # Procedure dependencies: none
+
     selectObject: .table
     .num_rows = Get number of rows
     Append column: "del"
@@ -533,6 +569,7 @@ procedure delRowsIf: .table, .cond$
 endproc
 
 procedure keepCols: .table, .keep_cols$, .new_table$
+    # Procedure dependencies: @list2array
     @list2array: .keep_cols$, ".keep$"
     selectObject: .table
     '.new_table$' = Copy: .new_table$
@@ -553,6 +590,8 @@ procedure keepCols: .table, .keep_cols$, .new_table$
 endproc
 
 procedure tableStats: .table, .colX$, .colY$
+    # Procedure dependencies: @keepCols, @table2array
+
     @keepCols: .table, "'.colX$' '.colY$'", "tableStats.shortTable"
 
     .numRows = Get number of rows
