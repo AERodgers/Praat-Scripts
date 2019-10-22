@@ -37,16 +37,19 @@
     #                       scripts.
 
 form c3pogram
-    sentence title
-    natural sound 2
+    sentence image_title
+    comment Enter ID number of sound (and textgrid) file in the objects window.
+    natural sound 1
     integer grid 0 (=  no textgrid)
+    comment Enter number of textgrid tier for display (sets min and max time of output display)
     integer tier 0 (=  no textgrid)
+    boolean Paint_spectrogram 1
+    comment Enter parameter settings
     natural minF0 60
     natural maxF0 400
     choice pitch_scale 2
         button Hertz
         button Semitones re 1 Hz
-    boolean Paint_spectrogram 1
     choice Parameter_two 1
         button Cepstral Peak Prominence
         button Residual of intensity (linear regression)
@@ -57,6 +60,7 @@ form c3pogram
     comment H1-H2 estimation is very basic. It also emphasises very tense / creaky stretches
     comment Harmonicity seems to reflects spectral balance (higher values for approximants, nasals)
 endform
+title$ = image_title$
 
 @c3pogram: parameter_two, pitch_scale, paint_spectrogram, title$, grid, sound, tier, minF0, maxF0
 
