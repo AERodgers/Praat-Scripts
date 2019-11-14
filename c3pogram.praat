@@ -392,7 +392,7 @@ endproc
 procedure cpp: .sound, .minF0, .maxF0, .pitchTable
     # Procedure dependencies:  @delRowsIf
     selectObject: .sound
-    .powerCepstrogram = To PowerCepstrogram: 75, 0.002, 5000, .minF0
+    .powerCepstrogram = To PowerCepstrogram: .minF0, 0.002, 5000, 50
 
     selectObject: .pitchTable
     .table = Copy: "CPP"
