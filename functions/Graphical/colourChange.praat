@@ -9,7 +9,7 @@
 # Changes colour vector string (.curCol$) using command in .change$
 # Examples:
 #     .change$ =  "+ 0.1" will lighten the colour
-#     .change$ = " * 0.5" will halve the brightnessof the colour
+#     .change$ = " * 0.5" will halve the brightness of the colour
 #     .change$ = " * {0.5,1,0.5} will enhance the greenness of the colour
 
 procedure colourChange: .curCol$, .newCol$, .change$
