@@ -24,7 +24,7 @@
 #       If these are used in the procedure @doubleIntegral with
 #       .y$ = .d2ydx2Col$ of this procedure, it will return the orginal contour.
 #
-#       (This functionaity may seem slightly odd, but it was implemented with
+#       (This functionality may seem slightly odd, but it was implemented with
 #       the idea of using the second derivative as a means of smoothing the
 #       original contour, in which case it would be useful to know the
 #       intercepts of the original contour and its first derivative)
