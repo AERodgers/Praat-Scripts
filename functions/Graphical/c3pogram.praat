@@ -8,7 +8,7 @@
 #
 # Draws a pitch contour with a spectrogram and single textgrid reference tier
 # (if grid and tier are specified). A secondary parameter determines the size
-# and and intensity of the pitch contour points. Cut-off  points are built into
+# and intensity of the pitch contour points. Cut-off  points are built into
 # the functions, below or above which the F0 contour is shown with a red dot.
 # (NB: For H1-H2, lower values are indicated by larger circles and more intense
 # colour.)
