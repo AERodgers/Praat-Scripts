@@ -8,8 +8,8 @@
 #
 # @textgridTemp: .original$, .keep_list$
 #     - Create a temporary textgrid called textgridTemp.object which keeps only
-#       tiers in space separated .keep_list$ string. (NB: textgrid tiers must
-#       NOT have spaces in them.)
+#       tiers listed in a space-separated .keep_list$ string. (NB: textgrid tiers
+#        must NOT have spaces in them.)
 #     - .original$ should contain the variable name of the original textgrid,
 #       (e.g. @textgridTemp: "myTextgrid, "Mary John bell")
 #
