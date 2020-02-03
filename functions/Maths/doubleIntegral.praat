@@ -8,7 +8,7 @@
 # October 10 - December 18, 2019
 
 # Calculates the double integral of a discrete contour. Assuming the input is
-# the second derivative of on original discrete contour, and the output is its
+# the second derivative of an original discrete contour, and the output is its
 # double integral, the function can be defined as:
 #
 #    N
