@@ -360,7 +360,7 @@ procedure neutralise_pitch: .sound
     To Manipulation: 0.01, 75, 600
     .manip = selected ()
 
-    # get importat time and pitch info
+    # get important time and pitch info
     selectObject: .pitch
     .time_s = Get start time
     .dur = Get total duration
