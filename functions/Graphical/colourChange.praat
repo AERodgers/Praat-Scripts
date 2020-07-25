@@ -25,3 +25,20 @@ procedure colourChange: .curCol$, .newCol$, .change$
         ... + ", " + string$(.newCol#[2])
         ... + ", " + string$(.newCol#[3]) + "}"
 endproc
+
+# July 25, 2020
+# Same function, new name! (New name clearer - will eventually replace old one)
+procedure modifyColVectr: .curCol$, .newCol$, .change$
+    .newCol# = '.curCol$' '.change$'
+    for .i to 3
+        if .newCol#[.i] > 1
+            .newCol#[.i] = 1
+        elsif .newCol#[.i] < 0
+            .newCol#[.i] = 0
+        endif
+    endfor
+
+    '.newCol$' = "{" + string$(.newCol#[1])
+    ... + ", " + string$(.newCol#[2])
+    ... + ", " + string$(.newCol#[3]) + "}"
+endproc
