@@ -121,7 +121,8 @@ if number(left$(praatVersion$, 1)) < 6
 endif
 
 ## process input variables
-if right$(directory$, 1) <> "/" or right$(directory$, 1) <> "\"
+if (right$(directory$, 1) != "/" or right$(directory$, 1) != "\") and
+    ... right$(directory$, 1) != ""
     directory$ = directory$ + "/"
 endif
 soundType$ = default_Sound_File$

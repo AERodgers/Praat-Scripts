@@ -8,7 +8,7 @@
 # March 10, 2018
 
 # This script runs a Hann stop band filter on all waveforms in a
-# specified folder to remove low-frequency noise from 0 Hz to 
+# specified folder to remove low-frequency noise from 0 Hz to
 # specfied lowest pass frequency.
 # DOES NOT CREATE BACKUPS!
 
@@ -29,7 +29,8 @@ endform
 if left$(defaultSoundFile$, 1) != "."
     defaultSoundFile$ = "." + defaultSoundFile$
 endif
-if right$(directory$, 1) != "/" or right$(directory$, 1) != "\"
+if (right$(directory$, 1) != "/" or right$(directory$, 1) != "\") and
+    ... right$(directory$, 1) != ""
     directory$ += "/"
 endif
 
@@ -71,7 +72,7 @@ info$ = ""
 for curr_file to numberOfFiles
     selectObject: file_list
     fileName$ = Get string: curr_file
-    info$ += "  - ""'fileName$'"" " 
+    info$ += "  - ""'fileName$'"" "
     unFiltered = Read from file: directory$ + fileName$
     Save as WAV file: backup$ + fileName$
     filtered = Filter (stop Hann band): 0, lowest_pass_frequency, smoothing
