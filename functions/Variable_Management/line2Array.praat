@@ -17,16 +17,16 @@
 # Arguments to the procedure:
 #     .string$ -> the input string
 #     .sep$    -> the separator used in the string$
-#     .size$   -> a string with the literal name of an out variable
-#                 stating the size the array.
-#     .array$  -> a string with the literal name of the output array
+#     .out$  -> a string with the literal name of the output array;
+#               array size is stored as the variable "'.out$'_N"
 
-procedure line2Array: .string$, .sep$, .size$, .array$
+procedure line2Array: .string$, .sep$, .out$
     # correct variable name Strings
-    .size$ = replace$(.size$, "$", "", 0)
-    if right$(.array$, 1) != "$"
-        .array$ += "$"
+    if right$(.out$, 1) != "$"
+        .out$ += "$"
     endif
+    .size$ = replace$(.out$, "$", "_N", 0)
+
     # fix input csvLine array
     .string$ = replace$(.string$, "'.sep$' ", .sep$, 0)
     while index(.string$, "  ")
@@ -39,10 +39,10 @@ procedure line2Array: .string$, .sep$, .size$, .array$
     while length(.string$) > 0
         '.size$' += 1
         .nextElementEnds = index(.string$, .sep$)
-        '.array$'['.size$'] = left$(.string$, .nextElementEnds)
-        .string$ = replace$(.string$, '.array$'['.size$'], "", 1)
-        '.array$'['.size$'] = replace$('.array$'['.size$'], .sep$, "", 1)
-        if '.array$'['.size$'] = ""
+        '.out$'['.size$'] = left$(.string$, .nextElementEnds)
+        .string$ = replace$(.string$, '.out$'['.size$'], "", 1)
+        '.out$'['.size$'] = replace$('.out$'['.size$'], .sep$, "", 1)
+        if '.out$'['.size$'] = ""
             '.size$' -= 1
         endif
     endwhile
