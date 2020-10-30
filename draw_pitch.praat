@@ -27,10 +27,12 @@
 ###############
 form Draw spectrogram with single tier and pitch_object track
     comment Picture size (width)
+    sentence title
     natural image_width 6 (=inches)
     comment Sound and pitch objects
     integer sound 2 (=object number)
     integer pitch_object 3 (=object number)
+    boolean draw_pitch
     comment Textgrid information
     integer text_grid 1 (=object number)
     integer grid_tier 2 (=tier to display)
@@ -78,8 +80,9 @@ endif
         ... start_time,
         ... end_time,
         ... image_width,
-        ... f0_measurement
-fileName$ = chooseWriteFile$: "Save as PNG file", "pitch_"  + drawPitchPic.saveName$
+        ... f0_measurement,
+        ... title$
+fileName$ = chooseWriteFile$: "Save as PNG file", drawPitchPic.saveName$
 Save as 300-dpi PNG file: fileName$
 
 ##############
@@ -94,7 +97,8 @@ procedure drawPitchPic: .sound,
         ... .start_time,
         ... .end_time,
         ... .image_width,
-        ... .f0_measurement
+        ... .f0_measurement,
+        ... .title$
 
     # set tick mark size
     .range = .maximum_F0 - .minimum_F0
@@ -110,45 +114,55 @@ procedure drawPitchPic: .sound,
     # extract and draw epectrogram
     selectObject: .sound
     .sGram = To Spectrogram: 0.005, 5000, 0.002, 20, "Gaussian"
-    Paint: .start_time, .end_time, 0, 5000, 100, "no", 50, 6, 0, "no"
-    Marks right every: 1000, 0.500, "yes", "yes", "no"
-    Text right: "yes", "Spectral Frequency (kHz)"
+    Paint: .start_time, .end_time, 0, 5000, 100, "yes", 50, 6, 0, "no"
+    if draw_pitch
+        Marks right every: 1000, 0.500, "yes", "yes", "no"
+        Text right: "yes", "Spectral Frequency (kHz)"
+    else
+        Marks left every: 1000, 0.500, "yes", "yes", "no"
+        Text left: "yes", "Spectral Frequency (kHz)"
+    endif
 
     # extract and draw textgrid tier
     selectObject: .text_grid
     .singleTier = Extract one tier: .grid_tier
-    plusObject: .pitch_object
-    Select outer viewport: 0, .image_width, 0, 4
-    if .f0_measurement = 1
-        .markDistance = round(round(.range/10)/10)*10
-        Draw separately: .start_time, .end_time, .minimum_F0, .maximum_F0, "yes", "yes", "no"
+    if draw_pitch
+        plusObject: .pitch_object
+        Select outer viewport: 0, .image_width, 0, 4
+        if .f0_measurement = 1
+            Draw separately (semitones): .start_time, .end_time, .minimum_F0, .maximum_F0, "yes", "yes", "no"
+        endif
     else
-        Draw separately (semitones): .start_time, .end_time, .minimum_F0, .maximum_F0, "yes", "yes", "no"
+        Select outer viewport: 0, .image_width, 0, 4
+        Draw: .start_time, .end_time, "yes", "yes", "no"
+        pause
     endif
 
     # draw pitch contour
-    White
-    Line width: 5
-    selectObject: .pitch_object
-    Select outer viewport: 0, .image_width, 0, 3.35
-    if .f0_measurement = 1
-        Draw: .start_time, .end_time, .minimum_F0, .maximum_F0, "no"
-        Blue
-        Line width: 3
-        Draw: .start_time, .end_time, .minimum_F0, .maximum_F0, "no"
-        Line width: 1
-        Black
-        Marks left every: 1, .markDistance, "yes", "yes", "no"
-        Text left: "yes", "Fundamental Frequency (Hz)"
-    else
-        Draw semitones (re 100 Hz): .start_time, .end_time, .minimum_F0, .maximum_F0, "no"
-        Blue
-        Line width: 3
-        Draw semitones (re 100 Hz): .start_time, .end_time, .minimum_F0, .maximum_F0, "no"
-        Line width: 1
-        Black
-        Marks left every: 1, .markDistance, "yes", "yes", "no"
-        Text left: "yes", "Fundamental Frequency (semitones re 100 Hz)"
+    if draw_pitch
+        White
+        Line width: 5
+        selectObject: .pitch_object
+        Select outer viewport: 0, .image_width, 0, 3.35
+        if .f0_measurement = 1
+            Draw: .start_time, .end_time, .minimum_F0, .maximum_F0, "no"
+            Blue
+            Line width: 3
+            Draw: .start_time, .end_time, .minimum_F0, .maximum_F0, "no"
+            Line width: 1
+            Black
+            Marks left every: 1, .markDistance, "yes", "yes", "no"
+            Text left: "yes", "Fundamental Frequency (Hz)"
+        else
+            Draw semitones (re 100 Hz): .start_time, .end_time, .minimum_F0, .maximum_F0, "no"
+            Blue
+            Line width: 3
+            Draw semitones (re 100 Hz): .start_time, .end_time, .minimum_F0, .maximum_F0, "no"
+            Line width: 1
+            Black
+            Marks left every: 1, .markDistance, "yes", "yes", "no"
+            Text left: "yes", "Fundamental Frequency (semitones re 100 Hz)"
+        endif
     endif
 
     # draw remaining image elements
@@ -157,12 +171,9 @@ procedure drawPitchPic: .sound,
     Marks bottom every: 0.001, 200, "yes", "yes", "no"
     Marks bottom every: 0.001, 100, "no", "yes", "no"
     Text bottom: "yes", "Time (ms)"
-    .title$ = selected$()
-    .title$ = replace$(.title$, "Pitch ", "", 1)
     .saveName$ = .title$ + ".png"
-    .title$ = replace$(.title$, "_", "\_ ", 0)
     12
-    Text top: "yes", "##%f_0 contour for " + .title$
+    Text top: "yes", .title$
     10
 
     # remove objects

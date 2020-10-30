@@ -1,5 +1,5 @@
-# Generate batch of textgrids
-# =========================
+# Generate batch of textgrids V.1.0.0
+# ===================================
 # Written for Praat 6.0.31
 
 # script by Antoin Eoin Rodgers
