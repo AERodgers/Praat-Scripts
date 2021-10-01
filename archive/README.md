@@ -9,4 +9,4 @@ and probably quite difficult to follow, as they represent my first forays into
 programming after a 25-year hiatus.
 
 Elements of the scripts such as ```@edit_textgtrids``` and ```@fix_pitch``` are better
-maintained in the main folder of my Praat=Scripts Github.
+maintained in the main folder of my Praat-Scripts Github.
