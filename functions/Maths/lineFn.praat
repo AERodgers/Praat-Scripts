@@ -6,6 +6,7 @@
 # rodgeran@tcd.ie
 # Phonetics and speech Laboratory, Trinity College Dublin
 # November 11, 2019
+# October 04, 2021 -- added .root return.
 #
 # Calculates the slope, intercept and function (in string form) of a line
 # function based on two input points, {.x1, .y1} and {.x2, .y2}.
@@ -16,6 +17,7 @@
 #
 # outputs: slope     = myVariable.a
 #          intercept = myVariable.b
+#          root      = myVariable.root
 #          equation  = myVariable.text$
 #
 # The ouput text is rounded to '.rounding' decimal point, with 'myVariable$'
@@ -31,6 +33,7 @@
 procedure lineFn: .ans$, .x1, .y1, .x2, .y2, .rounding
     '.ans$'.a = (.y2 - .y1) / (.x2 - .x1)
     '.ans$'.b = .y1 - '.ans$'.a * .x1
+    '.ans$'.root = - '.ans$'.b / '.ans$'.a
 
     if '.ans$'.a = 0
         .slope$ = ""
