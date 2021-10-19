@@ -7,6 +7,8 @@
 # Phonetics and speech Laboratory, Trinity College Dublin
 
 procedure list2array: .list$, .array$
+    # Ouputs space-separated items in .list$ as a string array called '.array$'.
+
     .list_len = length(.list$)
     .n = 1
     .prev_start = 1
