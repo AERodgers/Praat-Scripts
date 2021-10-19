@@ -77,10 +77,12 @@ if (right$(directory$, 1) != "/" or right$(directory$, 1) != "\") and
     ... right$(directory$, 1) != ""
     directory$ += "/"
 endif
-if (right$(resynthesis_directory$, 1) != "/" or
-    ... right$(resynthesis_directory$, 1) != "\") and
-    ... right$(resynthesis_directory$, 1) != "")
+
+if right$(resynthesis_directory$, 1) != ""
+    if right$(resynthesis_directory$, 1) != "/"  or
+    ... right$(resynthesis_directory$, 1) != "\"
     resynthesis_directory$ += "/"
+    endif
 endif
 rs_dir_prefix$ = resynthesis_directory$ + resynthesis_file_prefix$
 
