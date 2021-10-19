@@ -6,36 +6,37 @@
 # rodgeran@tcd.ie
 # Phonetics and speech Laboratory, Trinity College Dublin
 #
-# Draws a pitch contour with a spectrogram and single textgrid reference tier
-# (if grid and tier are specified). A secondary parameter determines the size
-# and intensity of the pitch contour points. Cut-off  points are built into
-# the functions, below or above which the F0 contour is shown with a red dot.
-# (NB: For H1-H2, lower values are indicated by larger circles and more intense
-# colour.)
-#
-# The script is inspired by the excellent periogram demonstrated at ICPHS by
-# Albert, Cangemi, and Grice (2019).
-#
-# Takes the following arguments:
-#     parameter_two ...... 1 = CPP, 2 = Residual of Intensity, 3  = Harmonicity
-#     pitch_scale ........ 1 = Hertz, 2 = Semitones re 1 Hz
-#     paint_spectrogram .. 0 = no spectrogram, 1 = draw spectrogram
-#     title$ ............. image title
-#     grid ............... textgrid object
-#     sound .............. sound object
-#     tier ............... reference tier
-#     minF0 .............. min F0 (Hertz)
-#     maxF0 .............. max F0 (Hertz)
-#
-# REFERENCE
-# Albert, A., Cangemi, F., & Grice, M. (2019). Can you draw me a question?
-#     International Congress of Phonetic Sciences.
-#     doi.org/10.13140/RG.2.2.15700.14729
 
 
 # C3POGRAM FUNCTIONS
 procedure c3pogram: .param2, .hz_ST, .paintSpect, .title$, .grid, .sound,
     ... .tier, .minF0, .maxF0
+    # Draws a pitch contour with a spectrogram & single textgrid reference tier.
+        # (Draw referent tier if grid and tier are specified).
+        # A secondary parameter determines the size and intensity of the pitch
+        # contour points. Cut-off  points are built into the functions, below or
+        # above which the F0 contour is shown with a red dot. (NB: For H1-H2,
+        # lower values are indicated by larger circles and more intense colour.)
+        #
+        # The script is inspired by the excellent periogram demonstrated at
+        # ICPHS by Albert, Cangemi, and Grice (2019).
+        #
+        # Takes the following arguments:
+        #     parameter_two ...... 1=CPP, 2=Residual of Intensity, 3=Harmonicity
+        #     pitch_scale ........ 1=Hertz, 2=Semitones re 1 Hz
+        #     paint_spectrogram .. 0=no spectrogram, 1=draw spectrogram
+        #     title$ ............. image title
+        #     grid ............... textgrid object
+        #     sound .............. sound object
+        #     tier ............... reference tier
+        #     minF0 .............. min F0 (Hertz)
+        #     maxF0 .............. max F0 (Hertz)
+        #
+        # REFERENCE
+        # Albert, A., Cangemi, F., & Grice, M. (2019). Can you draw me a
+        #     question?
+        #     International Congress of Phonetic Sciences.
+        #     doi.org/10.13140/RG.2.2.15700.14729
 
     # adjust sound intensity
     selectObject: .sound
