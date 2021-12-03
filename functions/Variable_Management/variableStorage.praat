@@ -19,31 +19,27 @@
 #                  appendFileLine: file$, ".varName3$" + tab$ + .varValue3
 #                  ... etc.
 
-# The following procedure is required for the procedures to work properly:
-#     @vector2Str
-#
-# @readVars: .dir$, .file$
-# ========================
-# Reads the table of variables found in '.dir$.''file$' and declares a set
-# of variables from it. It takes the following arguments:
-#
-#     .dir$  -> directory of file (include "/" at end if necessary)
-#     .file$ -> file name of variables table.
-#               NOTE: File name must begin with a lowercase letter.
-#
-# It also creates a copy of each variable prefixed with "x_". This allows
-# you to compare the current state of each variable with its state when it
-# was declared.
-#
-# Finally, it creates two variables for use in writeVars: each one is prefixed
-# with the filename (excluding filename extensions) plus "Var$[n]" and "NumVars"
-#
-# @writeVars: .dir$, .file$
-# =========================
-# Writes the variables read in from @readVars back to the original file.
+# Dependency:
+# @vector2Str -->  required for the procedures to work properly.
 
 procedure readVars: .dir$, .file$
-    # reads list of variables from TSV .file$ (headers, "variable, "value")
+    # Reads list of variables from TSV .file$ (headers, "variable, "value")
+    #
+    # Reads the table of variables found in '.dir$.''file$' and declares a set
+    # of variables from it. It takes the following arguments:
+    #
+    #     .dir$  -> directory of file (include "/" at end if necessary)
+    #     .file$ -> file name of variables table.
+    #               NOTE: File name must begin with a lowercase letter.
+    #
+    # It also creates a copy of each variable prefixed with "x_". This allows
+    # you to compare the current state of each variable with its state when it
+    # was declared.
+    #
+    # Finally, it creates two variables for use in writeVars: each one is pre-
+    # fixed with the filename (excluding filename extensions) plus "Var$[n]"
+    # and "NumVars".
+
     .vars = Read Table from tab-separated file: "'.dir$''.file$'"
     .prefix$ = left$(.file$, rindex(.file$, ".") - 1)
     '.prefix$'NumVars = Get number of rows
@@ -84,14 +80,10 @@ procedure readVars: .dir$, .file$
 endproc
 
 procedure writeVars: .dir$, .file$
-    # Writes list of variables to TSV .file$ (headers, "variable, "value")
+    # Writes list of variables to TSV .file$ (headers, "variable, "value").
+    #
+    # Writes the variables read in from @readVars back to the original file.
 
-    if variableExists("sorting")
-        sorting = 1
-    endif
-    if variableExists("changeAddColSch")
-        changeAddColSch = 0
-    endif
     .prefix$ = left$(.file$, rindex(.file$, ".") - 1)
     .vars = Read Table from tab-separated file: .dir$ + .file$
     for i to '.prefix$'NumVars
