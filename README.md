@@ -4,6 +4,9 @@ Praat scripts I have written to make it easier to annotate and edit textgrids, p
 I am by no means an expert, so there may be much better ways to achieve what I do in these scripts, but they generally do the job.
 
 I'll slowly be making the scripts I currently use more other-people friendly.
+
+Also, please make sure you update to the latest version of Praat.
+
 The scripts can be divided into four types:
 
     1. Quality of Life Scripts
