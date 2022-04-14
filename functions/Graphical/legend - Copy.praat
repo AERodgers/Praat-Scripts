@@ -25,8 +25,7 @@
 #                          (See "drawOblong.praat" for details)
 #     .addColour$ : Colour of legend item as a string name or string vector
 #     .addText$   : Text for legend item
-#     .addSize    : Size of legend object (line width or oblong in 10ths
-#                   of millimetres)
+#     .addSize    : Size of legend object (line width or oblong in 10ths #                   of millimetres)
 
 # @drawLegendLayer
 # ================
