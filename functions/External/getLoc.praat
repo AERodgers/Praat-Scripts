@@ -54,6 +54,7 @@ procedure getLoc: .dir$, .file$, .update
         ... .dir$ != ""
         .dir$ = .dir$ + "/"
     endif
+    .dir$ = replace$(.dir$, "\", "/", 0)
 
     # see if path file exists already
     if fileReadable("'.dir$''.file$'.path")
@@ -71,7 +72,6 @@ procedure getLoc: .dir$, .file$, .update
 endproc
 
 procedure find: .dir$, .file$
-
     # Get an array of the drives available on the local disk
     .tempFile$ = "drives.tmp"
     if windows
