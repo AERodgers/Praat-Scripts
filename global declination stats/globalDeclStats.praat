@@ -94,7 +94,6 @@ form F0 and Intensity global declination analysis
         button top right
 endform
 
-
 haanLines = draw_upper_and_lower_F0_regression
 
 # fix legend options
@@ -531,14 +530,38 @@ procedure output
         appendInfoLine: "Linear dB at start (projection)... ", declin.dBStart
         appendInfoLine: "Linear dB at end (projection)..... ", declin.dBEnd
     endif
-
 endproc
+
 ### mathematical procedures
 procedure linearY: .ans$, .slope, .intercept, .x
     '.ans$' = .slope * .x + .intercept
 endproc
 
-procedure tableStats: .var$, .table, .colX$, .colY$
+procedure tableStats: .var$, .table, .colX$, .colY$, .digits
+    # Returns a set of statistical values to variables beginnining with the
+    # prefix "var$". for  columns .colX$ and .colY$ .table. Results are rounded
+    # to .digits.
+    #
+    # In essence the procedure can be understood statistic as:
+    #     '.var$' = .table, .colX$, colY$, .digits
+    #
+    # It returns the following:
+    #     '.var$'.stDevY .............. standard deviation of .colY$
+    #     '.var$'.stDevX .............. standard deviation of .colYX
+    #     '.var$'.min ................. minimum value of .colY$
+    #     '.var$'.max ................. minimum value of .colY$
+    #     '.var$'.linear_regression$ .. linear regression (lr) information block
+    #     '.var$'.slope ............... slope of lr of .colY$(.colX$)
+    #     '.var$'.intercept ........... intercept of lr of .colY$(.colX$)
+    #     '.var$'.r ................... r value of  lr of .colY$(.colX$)
+    #     '.var$'.xMean ............... mean of .colX$
+    #     '.var$'.xMed ................ median of .colX$
+    #     '.var$'.yMean ............... mean of .colY$
+    #     '.var$'.yMed ................ median of .colY$
+
+
+
+
     @keepCols: .table, "'.colX$' '.colY$'", "tableStats.shortTable"
     .numRows = Get number of rows
     .factor$ = Get column label: 1
@@ -553,50 +576,50 @@ procedure tableStats: .var$, .table, .colX$, .colY$
     endif
 
     if .numRows > 1
-        '.var$'stDevY = Get standard deviation: .colY$
-        '.var$'stDevX = Get standard deviation: .colX$
-        '.var$'min = Get minimum: .colY$
-        '.var$'max = Get maximum: .colY$
+        '.var$'.stDevY = Get standard deviation: .colY$
+        '.var$'.stDevX = Get standard deviation: .colX$
+        '.var$'.min = Get minimum: .colY$
+        '.var$'.max = Get maximum: .colY$
         .linear_regression = To linear regression
         .linear_regression$ = Info
-        '.var$'slope = extractNumber (.linear_regression$,
+        '.var$'.slope = extractNumber (.linear_regression$,
             ... "Coefficient of factor '.colX$': ")
-        '.var$'intercept = extractNumber (.linear_regression$, "Intercept: ")
-        '.var$'r = round('.var$'slope * '.var$'stDevX / '.var$'stDevY * 1000)
+        '.var$'.intercept = extractNumber (.linear_regression$, "Intercept: ")
+        '.var$'.r = round('.var$'slope * '.var$'stDevX / '.var$'stDevY * 1000)
             ... / 1000
         selectObject: .linear_regression
         .info$ = Info
         Remove
     else
-        '.var$'stDevY = undefined
-        '.var$'stDevX = undefined
-        '.var$'min = undefined
-        '.var$'max = undefined
-        '.var$'linear_regression = undefined
-        '.var$'linear_regression$ = "N/A"
-        '.var$'slope = undefined
-        '.var$'intercept = Get value: 1, .colY$
-        '.var$'r = undefined
+        '.var$'.stDevY = undefined
+        '.var$'.stDevX = undefined
+        '.var$'.min = undefined
+        '.var$'.max = undefined
+        '.var$'.linear_regression = undefined
+        '.var$'.linear_regression$ = "N/A"
+        '.var$'.slope = undefined
+        '.var$'.intercept = Get value: 1, .colY$
+        '.var$'.r = undefined
         .info$ = "N/A"
     endif
 
     selectObject: .shortTable
 
-    '.var$'xMean = Get mean: .colX$
-    '.var$'xMed = Get quantile: .colX$, 0.5
-    '.var$'yMean = Get mean: .colY$
-    '.var$'yMed = Get quantile: .colY$, 0.5
+    '.var$'.xMean = Get mean: .colX$
+    '.var$'.xMed = Get quantile: .colX$, 0.5
+    '.var$'.yMean = Get mean: .colY$
+    '.var$'.yMed = Get quantile: .colY$, 0.5
 
     # round values
-    '.var$'stDevY = round('.var$'stDevY*10)/10
-    '.var$'stDevX = round('.var$'stDevX*10)/10
-    '.var$'slope = round('.var$'slope*10)/10
-    '.var$'intercept = round('.var$'intercept*10)/10
+    '.var$'.stDevY = round('.var$'.stDevY * 10^.digits) / 10^.digits
+    '.var$'.stDevX = round('.var$'.stDevX * 10^.digits) / 10^.digits
+    '.var$'.slope = round('.var$'.slope * 10^.digits) / 10^.digits
+    '.var$'.intercept = round('.var$'.intercept * 10^.digits) / 10^.digits
 
-    '.var$'xMean = round('.var$'xMean*10)/10
-    '.var$'xMed = round('.var$'xMed*10)/10
-    '.var$'yMean = round('.var$'yMean*10)/10
-    '.var$'yMed = round('.var$'yMed*10)/10
+    '.var$'.xMean = round('.var$'.xMean * 10^.digits) / 10^.digits
+    '.var$'.xMed = round('.var$'.xMed * 10^.digits) / 10^.digits
+    '.var$'.yMean = round('.var$'.yMean * 10^.digits) / 10^.digits
+    '.var$'.yMed = round('.var$'.yMed * 10^.digits) / 10^.digits
     Remove
 endproc
 
@@ -612,7 +635,7 @@ procedure linHaan: .table, .xCol$, .yCol$
     #         linHaan_lower.slope, linHaan_lower.intercept
     #         linHaan_upper.slope, linHaan_upper.intercept
 
-    @tableStats: "linHaan.", .table, .xCol$, .yCol$
+    @tableStats: "linHaan", .table, .xCol$, .yCol$, 2
     .slopeGen = .slope
     .interceptGen = .intercept
 
@@ -646,7 +669,7 @@ procedure linHaan: .table, .xCol$, .yCol$
         endfor
 
         # Get linear regression for values above / below main regression line
-        @tableStats: "linHaan.", .tempTable, .xCol$, .yCol$
+        @tableStats: "linHaan", .tempTable, .xCol$, .yCol$
         .slope'.ending$' = .slope
         .intercept'.ending$' = .intercept
 
