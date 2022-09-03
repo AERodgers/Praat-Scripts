@@ -852,7 +852,7 @@ procedure globalDictionaries
 
     ### ROOT DIRECTORY
 	##################
-    root_G$ = "G:/My Drive/Phonetics and speech/Research/2 Field Recordings"
+    root_G$ = "G:/My Drive/Phonetics and speech/Research/2 Recordings"
     meanSylDur_M$ = "/M-Corpus_MeanSylDur.Table"
     meanSylDur_A$ = "/A-Corpus_MeanSylDur.Table"
     sylMeanStrtT_M$ = "/M-Corpus_sylMeanStrtT.Table"

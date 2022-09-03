@@ -56,7 +56,7 @@
 #####################
 form Automatic Generation of textgrids from syllable tier only
     comment TARGET DIRECTORY CONTAINING .TextGrid files
-    sentence directory ..\2 Field Recordings\M4\sentence_modes
+    sentence directory ..\2 Recordings\M4\sentence_modes
     comment ANNOTATION TIER NAMES
     word ortho ortho
     word syllable syllable
