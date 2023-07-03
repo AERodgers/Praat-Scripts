@@ -85,8 +85,8 @@ form F0 and Intensity global declination analysis
         button F0 only
         button F0 and intensity
         button Intensity only
-    boolean draw_upper_and_lower_F0_regression 0
-    choice legend_options 1
+    boolean draw_upper_and_lower_F0_regression 1
+    choice legend_options 5
         button no legend
         button bottom left
         button bottom right
@@ -147,7 +147,7 @@ procedure declin: .grid, .tier, .sound, .minF0, .maxF0, .min_dB, .max_dB,
     @getPitchTable: .sound, .minF0, .maxF0, "declin"
 
     # calculate stats for Pitch
-    @tableStats: "declin.pitch_", .pitchTable, "Time", "F0"
+    @tableStats: "declin.pitch", .pitchTable, "Time", "F0", 2
     @linearY: "declin.startF0", .pitch_slope, .pitch_intercept, .startT
     @linearY: "declin.endF0", .pitch_slope, .pitch_intercept, .endT
     if .haanLines
@@ -174,7 +174,7 @@ procedure declin: .grid, .tier, .sound, .minF0, .maxF0, .min_dB, .max_dB,
         Set column label (label): "Time (s)", "Time"
 
         # calculate stats for Intensity
-        @tableStats: "declin.dB_", .dBTable, "Time", "Intensity"
+        @tableStats: "declin.dB", .dBTable, "Time", "Intensity", 2
         @linearY: "declin.dBStart", .dB_slope, .dB_intercept, .startT
         @linearY: "declin.dBEnd", .dB_slope, .dB_intercept, .endT
         # round values
@@ -242,17 +242,17 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT,
         # draw white F0 lines
         selectObject: .pitch
         Axes: .startT, .endT, log2(.minF0/100)*12, log2(.maxF0/100)*12
-        Line width: 6
+        Line width: 12
         @draw_table_line: .pitch, "Time", "F0", .startT, .endT, 1
-        Line width: 4
+        Line width: 9
         Draw line: .startT, .startF0, .endT, .endF0
     endif
     if .contour_options > 1
         # draw white dB lines
         Axes: .startT, .endT, .min_dB, .max_dB
-        Line width: 6
+        Line width: 12
         @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 1
-        Line width: 4
+        Line width: 9
         Draw line: .startT, .dBStart, .endT, .dBEnd
     endif
 
@@ -261,16 +261,16 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT,
         # draw coloured dB lines
         Axes: .startT, .endT, .min_dB, .max_dB
         Solid line
-        Line width: 4
+        Line width: 9
         Green
         @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 0
         Lime
-        Line width: 1
+        Line width: 6
         Solid line
         @draw_table_line: .dB, "Time", "Intensity", .startT, .endT, 0
         Solid line
         Green
-        Line width: 2
+        Line width: 6
         Draw line: .startT, .dBStart, .endT, .dBEnd
     endif
 
@@ -278,7 +278,7 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT,
         # draw coloured F0 lines
         Axes: .startT, .endT, log2(.minF0/100)*12, log2(.maxF0/100)*12
         Solid line
-        Line width: 4
+        Line width: 9
         Blue
         @draw_table_line: .pitch, "Time", "F0", .startT, .endT, 0
         #Cyan
@@ -286,7 +286,7 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT,
         #@draw_table_line: .pitch, "Time", "F0", .startT, .endT, 0
         Solid line
         Cyan
-        Line width: 2
+        Line width: 6
         Draw line: .startT, .startF0, .endT, .endF0
 
         if .haanLines
@@ -546,18 +546,18 @@ procedure tableStats: .var$, .table, .colX$, .colY$, .digits
     #     '.var$' = .table, .colX$, colY$, .digits
     #
     # It returns the following:
-    #     '.var$'.stDevY .............. standard deviation of .colY$
-    #     '.var$'.stDevX .............. standard deviation of .colYX
-    #     '.var$'.min ................. minimum value of .colY$
-    #     '.var$'.max ................. minimum value of .colY$
-    #     '.var$'.linear_regression$ .. linear regression (lr) information block
-    #     '.var$'.slope ............... slope of lr of .colY$(.colX$)
-    #     '.var$'.intercept ........... intercept of lr of .colY$(.colX$)
-    #     '.var$'.r ................... r value of  lr of .colY$(.colX$)
-    #     '.var$'.xMean ............... mean of .colX$
-    #     '.var$'.xMed ................ median of .colX$
-    #     '.var$'.yMean ............... mean of .colY$
-    #     '.var$'.yMed ................ median of .colY$
+    #     '.var$'_stDevY .............. standard deviation of .colY$
+    #     '.var$'_stDevX .............. standard deviation of .colYX
+    #     '.var$'_min ................. minimum value of .colY$
+    #     '.var$'_max ................. minimum value of .colY$
+    #     '.var$'_linear_regression$ .. linear regression (lr) information block
+    #     '.var$'_slope ............... slope of lr of .colY$(.colX$)
+    #     '.var$'_intercept ........... intercept of lr of .colY$(.colX$)
+    #     '.var$'_r ................... r value of  lr of .colY$(.colX$)
+    #     '.var$'_xMean ............... mean of .colX$
+    #     '.var$'_xMed ................ median of .colX$
+    #     '.var$'_yMean ............... mean of .colY$
+    #     '.var$'_yMed ................ median of .colY$
 
 
 
@@ -576,50 +576,50 @@ procedure tableStats: .var$, .table, .colX$, .colY$, .digits
     endif
 
     if .numRows > 1
-        '.var$'.stDevY = Get standard deviation: .colY$
-        '.var$'.stDevX = Get standard deviation: .colX$
-        '.var$'.min = Get minimum: .colY$
-        '.var$'.max = Get maximum: .colY$
+        '.var$'_stDevY = Get standard deviation: .colY$
+        '.var$'_stDevX = Get standard deviation: .colX$
+        '.var$'_min = Get minimum: .colY$
+        '.var$'_max = Get maximum: .colY$
         .linear_regression = To linear regression
         .linear_regression$ = Info
-        '.var$'.slope = extractNumber (.linear_regression$,
+        '.var$'_slope = extractNumber (.linear_regression$,
             ... "Coefficient of factor '.colX$': ")
-        '.var$'.intercept = extractNumber (.linear_regression$, "Intercept: ")
-        '.var$'.r = round('.var$'slope * '.var$'stDevX / '.var$'stDevY * 1000)
+        '.var$'_intercept = extractNumber (.linear_regression$, "Intercept: ")
+        '.var$'_r = round('.var$'_slope * '.var$'_stDevX / '.var$'_stDevY * 1000)
             ... / 1000
         selectObject: .linear_regression
         .info$ = Info
         Remove
     else
-        '.var$'.stDevY = undefined
-        '.var$'.stDevX = undefined
-        '.var$'.min = undefined
-        '.var$'.max = undefined
-        '.var$'.linear_regression = undefined
-        '.var$'.linear_regression$ = "N/A"
-        '.var$'.slope = undefined
-        '.var$'.intercept = Get value: 1, .colY$
-        '.var$'.r = undefined
+        '.var$'_stDevY = undefined
+        '.var$'_stDevX = undefined
+        '.var$'_min = undefined
+        '.var$'_max = undefined
+        '.var$'_linear_regression = undefined
+        '.var$'_linear_regression$ = "N/A"
+        '.var$'_slope = undefined
+        '.var$'_intercept = Get value: 1, .colY$
+        '.var$'_r = undefined
         .info$ = "N/A"
     endif
 
     selectObject: .shortTable
 
-    '.var$'.xMean = Get mean: .colX$
-    '.var$'.xMed = Get quantile: .colX$, 0.5
-    '.var$'.yMean = Get mean: .colY$
-    '.var$'.yMed = Get quantile: .colY$, 0.5
+    '.var$'_xMean = Get mean: .colX$
+    '.var$'_xMed = Get quantile: .colX$, 0.5
+    '.var$'_yMean = Get mean: .colY$
+    '.var$'_yMed = Get quantile: .colY$, 0.5
 
     # round values
-    '.var$'.stDevY = round('.var$'.stDevY * 10^.digits) / 10^.digits
-    '.var$'.stDevX = round('.var$'.stDevX * 10^.digits) / 10^.digits
-    '.var$'.slope = round('.var$'.slope * 10^.digits) / 10^.digits
-    '.var$'.intercept = round('.var$'.intercept * 10^.digits) / 10^.digits
+    '.var$'_stDevY = round('.var$'_stDevY * 10^.digits) / 10^.digits
+    '.var$'_stDevX = round('.var$'_stDevX * 10^.digits) / 10^.digits
+    '.var$'_slope = round('.var$'_slope * 10^.digits) / 10^.digits
+    '.var$'_intercept = round('.var$'_intercept * 10^.digits) / 10^.digits
 
-    '.var$'.xMean = round('.var$'.xMean * 10^.digits) / 10^.digits
-    '.var$'.xMed = round('.var$'.xMed * 10^.digits) / 10^.digits
-    '.var$'.yMean = round('.var$'.yMean * 10^.digits) / 10^.digits
-    '.var$'.yMed = round('.var$'.yMed * 10^.digits) / 10^.digits
+    '.var$'_xMean = round('.var$'_xMean * 10^.digits) / 10^.digits
+    '.var$'_xMed = round('.var$'_xMed * 10^.digits) / 10^.digits
+    '.var$'_yMean = round('.var$'_yMean * 10^.digits) / 10^.digits
+    '.var$'_yMed = round('.var$'_yMed * 10^.digits) / 10^.digits
     Remove
 endproc
 
@@ -636,8 +636,8 @@ procedure linHaan: .table, .xCol$, .yCol$
     #         linHaan_upper.slope, linHaan_upper.intercept
 
     @tableStats: "linHaan", .table, .xCol$, .yCol$, 2
-    .slopeGen = .slope
-    .interceptGen = .intercept
+    .slopeGen = linHaan_slope
+    .interceptGen = linHaan_intercept
 
     # Get suffix for output variable
     .sign$[1] = "<"
@@ -662,16 +662,16 @@ procedure linHaan: .table, .xCol$, .yCol$
             .x = .numRows - .row
             .yAct = Get value: .x, .yCol$
             .xAct = Get value: .x, .xCol$
-            .yLinear = .slope * .xAct + .intercept
+            .yLinear = linHaan_slope * .xAct + linHaan_intercept
             if .yAct '.direction$' .yLinear
                 Remove row: .x
             endif
         endfor
 
         # Get linear regression for values above / below main regression line
-        @tableStats: "linHaan", .tempTable, .xCol$, .yCol$
-        .slope'.ending$' = .slope
-        .intercept'.ending$' = .intercept
+        @tableStats: "linHaan", .tempTable, .xCol$, .yCol$, 2
+        .slope'.ending$' = linHaan_slope
+        .intercept'.ending$' = linHaan_intercept
 
         # Remove surplus objects
         selectObject: .tempTable
