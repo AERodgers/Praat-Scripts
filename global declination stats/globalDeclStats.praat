@@ -86,15 +86,16 @@ form F0 and Intensity global declination analysis
         button F0 and intensity
         button Intensity only
     boolean draw_upper_and_lower_F0_regression 1
+    natural Maximum_recursions 1
     choice legend_options 5
-        button no legend
-        button bottom left
-        button bottom right
-        button top left
-        button top right
+        option no legend
+        option bottom left
+        option bottom right
+        option top left
+        option top right
 endform
 
-haanLines = draw_upper_and_lower_F0_regression
+hi_lo_regression = draw_upper_and_lower_F0_regression
 
 # fix legend options
 Font size: 10
@@ -121,13 +122,15 @@ endif
 @declin: textgrid_object, text_grid_tier, sound_object, minF0, maxF0,
     ... min_dB, max_dB,
     ... title$, draw_legend,
-    ... haanLines, contour_options, hor, vert
+    ... hi_lo_regression, maximum_recursions,
+    ... contour_options, hor, vert
 @output
 Font size: 10
 
 ### MAIN PROCEDURE
 procedure declin: .grid, .tier, .sound, .minF0, .maxF0, .min_dB, .max_dB,
-    ... .title$, .draw_legend, .haanLines, .contour_options, .hor, .vert
+    ... .title$, .draw_legend, .hi_lo_regression, .max_recursion
+    ... .contour_options, .hor, .vert
     # Get phrase start and end times
     selectObject: .grid
     .num_tiers = Get number of tiers
@@ -150,8 +153,8 @@ procedure declin: .grid, .tier, .sound, .minF0, .maxF0, .min_dB, .max_dB,
     @tableStats: "declin.pitch", .pitchTable, "Time", "F0", 2
     @linearY: "declin.startF0", .pitch_slope, .pitch_intercept, .startT
     @linearY: "declin.endF0", .pitch_slope, .pitch_intercept, .endT
-    if .haanLines
-        @linHaan: .pitchTable, "Time", "F0"
+    if .hi_lo_regression
+        @hi_lo_regr: .pitchTable, .max_recursion, "Time", "F0"
     endif
     # round values
     .startF0 = round(.startF0*10)/10
@@ -185,7 +188,7 @@ procedure declin: .grid, .tier, .sound, .minF0, .maxF0, .min_dB, .max_dB,
         ... .minF0, .maxF0, .startF0, .endF0,
         ... .min_dB, .max_dB, .dBStart, .dBEnd,
         ... .title$, .draw_legend,
-        ... .haanLines, .contour_options,
+        ... .hi_lo_regression, .max_recursion, .contour_options,
         ... .hor, .vert
 
     # remove surplus objects
@@ -217,7 +220,7 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT,
     ... .minF0, .maxF0, .startF0, .endF0,
     ... .min_dB, .max_dB, .dBStart, .dBEnd,
     ... .title$, .draw_legend,
-    ... .haanLines, .contour_options,
+    ... .hi_lo_regression, .max_recursion, .contour_options,
     ... .hor, .vert
 
     # set viewport and ink
@@ -233,7 +236,8 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT,
     Remove
 
     if .draw_legend
-        @draw_legend: .hor, .vert, .haanLines, .contour_options
+        @draw_legend: .hor, .vert, .hi_lo_regression, .max_recursion,
+        ... .contour_options
     endif
 
     # draw white outlines
@@ -289,25 +293,24 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT,
         Line width: 6
         Draw line: .startT, .startF0, .endT, .endF0
 
-        if .haanLines
+        if .hi_lo_regression
             White
             Solid line
             Line width: 1
-            .uLineStF0 = .startT *  linHaan.slope_upper + linHaan.intercept_upper
-            .uLineEndF0 = .endT *  linHaan.slope_upper + linHaan.intercept_upper
+            .uLineStF0 = .startT *  hi_lo_regr.slope_upper + hi_lo_regr.intercept_upper
+            .uLineEndF0 = .endT *  hi_lo_regr.slope_upper + hi_lo_regr.intercept_upper
             Draw line: .startT, .uLineStF0, .endT, .uLineEndF0
-            .lLineStF0 = .startT *  linHaan.slope_lower + linHaan.intercept_lower
-            .lLineEndF0 = .endT *  linHaan.slope_lower + linHaan.intercept_lower
+            .lLineStF0 = .startT *  hi_lo_regr.slope_lower + hi_lo_regr.intercept_lower
+            .lLineEndF0 = .endT *  hi_lo_regr.slope_lower + hi_lo_regr.intercept_lower
             Draw line: .startT, .lLineStF0, .endT, .lLineEndF0
             Blue
             Dotted line
             Line width: 1
-            @linHaan: .pitch, "Time", "F0"
-            .uLineStF0 = .startT *  linHaan.slope_upper + linHaan.intercept_upper
-            .uLineEndF0 = .endT *  linHaan.slope_upper + linHaan.intercept_upper
+            .uLineStF0 = .startT *  hi_lo_regr.slope_upper + hi_lo_regr.intercept_upper
+            .uLineEndF0 = .endT *  hi_lo_regr.slope_upper + hi_lo_regr.intercept_upper
             Draw line: .startT, .uLineStF0, .endT, .uLineEndF0
-            .lLineStF0 = .startT *  linHaan.slope_lower + linHaan.intercept_lower
-            .lLineEndF0 = .endT *  linHaan.slope_lower + linHaan.intercept_lower
+            .lLineStF0 = .startT *  hi_lo_regr.slope_lower + hi_lo_regr.intercept_lower
+            .lLineEndF0 = .endT *  hi_lo_regr.slope_lower + hi_lo_regr.intercept_lower
             Draw line: .startT, .lLineStF0, .endT, .lLineEndF0
             Solid line
         endif
@@ -347,13 +350,21 @@ procedure drawStuff: .sound, .pitch, .dB, .startT, .endT,
     Text top: "yes", "##" + .title$
 endproc
 
-procedure draw_legend: .hor, .vert, .haanLines, .contour_options
+procedure draw_legend: .hor, .vert, .hi_lo_regression, .max_recursion,
+    ... .contour_options
     #calculate legend contents
     .legendLines = 0
     if .contour_options < 3
-        if .haanLines
+        if .hi_lo_regression
+            if .max_recursion = 1
+                recursion_text$ = "(Haan method)"
+            else
+                recursion_text$ = "(max=" + string$(.max_recursion) + ")"
+            endif
+
             .legendLines = .legendLines + 1
-            .legendText$[.legendLines] = "Upper/Lower F0 regression"
+            .legendText$[.legendLines] = "Upper/Lower F0 regression " +
+            ... recursion_text$
             .whiteSize[.legendLines] = 1
             .colour1$[.legendLines] = "Blue"
             .colour2$[.legendLines] = "Blue"
@@ -500,18 +511,18 @@ procedure output
         appendInfoLine: "Linear F0 at end (projection, ST)......... ",
             ... declin.endF0
 
-        if haanLines
+        if hi_lo_regression
             appendInfoLine: newline$,
                 ... "Upper and Lower F0 Regression Lines",
                 ... newline$, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
             appendInfoLine: "Upper Linear F0 slope (ST/sec)............ ",
-                ... linHaan.slope_upper
+                ... hi_lo_regr.slope_upper
             appendInfoLine: "Upper Linear F0 intercept (ST re 100 Hz).. ",
-                ... linHaan.intercept_upper
+                ... hi_lo_regr.intercept_upper
             appendInfoLine: "Lower Linear F0 slope (ST/sec)............ ",
-                ... linHaan.slope_lower
+                ... hi_lo_regr.slope_lower
             appendInfoLine: "Lower Linear F0 intercept (ST re 100 Hz).. ",
-                ... linHaan.intercept_lower
+                ... hi_lo_regr.intercept_lower
         endif
     endif
 
@@ -623,7 +634,8 @@ procedure tableStats: .var$, .table, .colX$, .colY$, .digits
     Remove
 endproc
 
-procedure linHaan: .table, .xCol$, .yCol$
+procedure hi_lo_regr: .table, .max_recursion,
+    ... .xCol$, .yCol$
     # Return linear regression lines of a contour from table form.
     # This procedure will return the upper and lower regression line for contour
     # (converted to table form) based on the overall linear regression line.
@@ -631,19 +643,24 @@ procedure linHaan: .table, .xCol$, .yCol$
     # of upper and lower slopes / regresion lines of an F0 contour.
     #
     # input: table, xCol$ [e.g. "Time"], yCol$ [e.g. "F0"]
-    # output: linHaan.slope, linHaan.intercept
-    #         linHaan_lower.slope, linHaan_lower.intercept
-    #         linHaan_upper.slope, linHaan_upper.intercept
+    # output: hi_lo_regr.slope, hi_lo_regr.intercept
+    #         hi_lo_regr_lower.slope, hi_lo_regr_lower.intercept
+    #         hi_lo_regr_upper.slope, hi_lo_regr_upper.intercept
 
-    @tableStats: "linHaan", .table, .xCol$, .yCol$, 2
-    .slopeGen = linHaan_slope
-    .interceptGen = linHaan_intercept
+    @tableStats: "hi_lo_regr", .table, .xCol$, .yCol$, 2
+    .slope_orig = hi_lo_regr_slope
+    .intercept_orig = hi_lo_regr_intercept
 
     # Get suffix for output variable
     .sign$[1] = "<"
     .sign$[2] = ">"
 
     for .i to 2
+
+        # reset regression line
+        hi_lo_regr_slope = .slope_orig
+        hi_lo_regr_intercept = .intercept_orig
+
         # Create temporary table
         selectObject: .table
         .tempTable = Copy: "TempTable"
@@ -656,13 +673,14 @@ procedure linHaan: .table, .xCol$, .yCol$
             .ending$ = "_upper"
         endif
 
+
         # Remove rows above / below the linear regression value
         for .row from 0 to .numRows - 1
             selectObject: .tempTable
             .x = .numRows - .row
             .yAct = Get value: .x, .yCol$
             .xAct = Get value: .x, .xCol$
-            .yLinear = linHaan_slope * .xAct + linHaan_intercept
+            .yLinear = hi_lo_regr_slope * .xAct + hi_lo_regr_intercept
             if .yAct '.direction$' .yLinear
                 Remove row: .x
             endif
@@ -672,6 +690,34 @@ procedure linHaan: .table, .xCol$, .yCol$
         @tableStats: "linHaan", .tempTable, .xCol$, .yCol$, 2
         .slope'.ending$' = linHaan_slope
         .intercept'.ending$' = linHaan_intercept
+
+
+         # Prepare for Recursive section
+         selectObject: .tempTable
+        .numRows = Get number of rows
+        .run_while = .numRows > 2
+
+        .cur_recursion = 0
+        while .run_while and .cur_recursion < .max_recursion
+            selectObject: .tempTable
+            # Remove rows above / below the linear regression value
+            for .row from 0 to .numRows - 1
+                .x = .numRows - .row
+                .yAct = Get value: .x, .yCol$
+                .xAct = Get value: .x, .xCol$
+                .yLinear = hi_lo_regr_slope * .xAct + hi_lo_regr_intercept
+                if .yAct '.direction$' .yLinear and .numRows > 2
+                    Remove row: .x
+                endif
+                .numRows = Get number of rows
+            endfor
+            # Get linear regression for values above / below main regression line
+            @tableStats: "hi_lo_regr", .tempTable, .xCol$, .yCol$, 2
+            .slope'.ending$' = hi_lo_regr_slope
+            .intercept'.ending$' = hi_lo_regr_intercept
+            .run_while = .numRows > 2
+            .cur_recursion += 1
+        endwhile
 
         # Remove surplus objects
         selectObject: .tempTable
