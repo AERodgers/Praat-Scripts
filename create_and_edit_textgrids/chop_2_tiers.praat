@@ -34,6 +34,7 @@
 ### Input Form
 form Input Parameters
     natural pass_band_frequency 45
+    positive Silence_length 0.25
     sentence output_file_prefix
 endform
 ### Get file to process
@@ -168,6 +169,9 @@ for i from start_sound to end_sound
             Remove
         endif
     endwhile
+    @add_silence: iTemp, silence_length
+    removeObject: iTemp
+    iTemp = add_silence.output
     selectObject: iTemp
     Save as WAV file: fileNameCur$
     text$ = "   " + output_file_prefix$ + unique_name$[j] + ".wav" + backedUp$
@@ -222,4 +226,23 @@ procedure SetUpFolders: .directory$
     reportPath$ = reportPath$ + "/"
     backupPath$ = backupPath$ + "/"
     reportFilePath$ = reportPath$ + reportName$
+endproc
+
+### Add silence to sound file
+procedure add_silence: .sound_object, .silence_length
+    .silence_length = .silence_length + 0.01 
+    selectObject: .sound_object
+    .fs = Get sampling frequency
+    .channels = Get number of channels
+    .silence_in = Create Sound from formula:
+    ... "silence", .channels, 0, .silence_length, .fs, "0"
+    selectObject: .sound_object
+    .temp_sound = Copy: "temp_sound"
+    selectObject: .silence_in
+    .silence_out = Copy: "silence_out"
+    selectObject: .silence_in
+    plusObject: .temp_sound 
+    plusObject: .silence_out    
+    .output = Concatenate with overlap: 0.01
+    removeObject: .silence_in, .temp_sound, .silence_out    
 endproc
