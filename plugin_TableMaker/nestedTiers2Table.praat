@@ -12,7 +12,7 @@
 @checkPraatVersion
 firstPass = 1
 @objsSelected: "Sound,TextGrid", "ui.soundID$,ui.gridID$"
-@purgeDirFiles: preferencesDirectory$ + "/plugin_AERoPlot/data/temp"
+@purgeDirFiles: preferencesDirectory$ + "/plugin_TableMaker/data/temp"
 @main
 
 procedure main
@@ -22,7 +22,8 @@ procedure main
     @ui
 
     @writeVars:
-    ... preferencesDirectory$ + "/plugin_AERoPlot/data/vars/", "tier2Table.var"
+    ... preferencesDirectory$ + "/plugin_TableMaker/data/vars/",
+    ... "tier2Table.var"
 
     @getObject: ui.gridID$, "textGrid", "main"
     @getObject: ui.soundID$, "sound", "main"
