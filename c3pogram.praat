@@ -50,17 +50,20 @@ form c3pogram
     choice pitch_scale 2
         button Hertz
         button Semitones re 1 Hz
-    choice Parameter_two 1
+    choice Parameter_two 2
+        button Nothing
         button Cepstral Peak Prominence
         button Residual of intensity (linear regression)
         button H1-H2 of differentiated glottal pulse (LPC-IF)
         button Harmonicity (Praat function)
+   
     comment CPP appears to reflect more intuitive expectations of contour.
     comment Residual of linear regression of intensity used to compensate for global declination.
     comment H1-H2 estimation is very basic. It also emphasises very tense / creaky stretches
     comment Harmonicity seems to reflects spectral balance (higher values for approximants, nasals)
 endform
 title$ = image_title$
+parameter_two = parameter_two - 1
 
 @c3pogram: parameter_two, pitch_scale, paint_spectrogram, title$, grid, sound, tier, minF0, maxF0
 
@@ -136,22 +139,24 @@ procedure c3pogram: .param2, .hz_ST, .paintSpect, .title$, .grid, .sound, .tier,
     .secondParam$[2] = "intensity"
     .secondParam$[3] = "h1h2"
     .secondParam$[4] = "harmonicity"
-    .name$ = .secondParam$[.param2]
-    if .param2 = 1
-        @cpp: .sound, .minF0, .maxF0, pitch2Table.table
-    elsif .param2 = 2
-        @intensity: .sound, .minF0, .minT, .maxT
-    elsif .param2 = 3
-        @h1h2: .sound, pitch2Table.table
-        selectObject: h1h2.table
-        Formula: "value", "-self"
-    else
-        @harmonicity: .sound, .minF0
-    endif
-    .vqTable = '.name$'.table
+    if .param2
+        .name$ = .secondParam$[.param2]
+        if .param2 = 1
+            @cpp: .sound, .minF0, .maxF0, pitch2Table.table
+        elsif .param2 = 2
+            @intensity: .sound, .minF0, .minT, .maxT
+        elsif .param2 = 3
+            @h1h2: .sound, pitch2Table.table
+            selectObject: h1h2.table
+            Formula: "value", "-self"
+        elsif .param2 = 4
+            @harmonicity: .sound, .minF0
+        endif
+        .vqTable = '.name$'.table
 
-    # draw cp3ogram
-    @drawC3Pogram: pitch2Table.table, .vqTable, .minT, .maxT, .minF0, .maxF0, .param2, .hz_ST
+        # draw cp3ogram
+        @drawC3Pogram: pitch2Table.table, .vqTable, .minT, .maxT, .minF0, .maxF0, .param2, .hz_ST
+    endif
 
     # add pitch axis information
     Select outer viewport: 0, 6, 0, 3.35
@@ -179,8 +184,7 @@ procedure c3pogram: .param2, .hz_ST, .paintSpect, .title$, .grid, .sound, .tier,
     Text top: "yes", "##" + .title$
     Font size: 10
 
-    selectObject: .vqTable
-    plusObject: pitch2Table.table
+    selectObject: pitch2Table.table
     plusObject: pitch.obj
     if .grid * .tier > 0
         plusObject: .refTier
